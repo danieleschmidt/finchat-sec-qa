@@ -1,10 +1,18 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "finchat"
-version = "0.0.0"
-description = "FinChat SEC QA"
-authors = [{name = "FinChat", email = "dev@example.com"}]
-requires-python = ">=3.9"
+name = "finchat_sec_qa"
+version = "0.0.1"
+requires-python = ">=3.8"
+dependencies = [
+    "requests",
+    "scikit-learn",
+    "numpy",
+    "vaderSentiment",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+packages = ["finchat", "finchat_sec_qa"]
