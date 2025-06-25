@@ -1,10 +1,34 @@
 {
-  "establish-a-testing-framework-(`pytest`,-etc.)-with-initial-tests.": {
-    "test_file": "tests/test_foundational.py",
-    "description": "Verifies that Establish a testing framework (`pytest`, etc.) with initial tests.",
+  "design-citation-data-model": {
+    "test_file": "tests/test_design-citation-data-model.py",
+    "description": "Verifies that Design Citation data model.",
     "cases": {
-      "success": "Asserts the primary success case.",
-      "edge_case_null_input": "Asserts that providing null input is handled gracefully."
+      "success": "Asserts expected behavior with valid input.",
+      "edge_case_invalid_input": "Asserts handling of invalid or missing input."
+    }
+  },
+  "extract-citation-anchors-from-filings": {
+    "test_file": "tests/test_extract-citation-anchors-from-filings.py",
+    "description": "Verifies that Extract citation anchors from filings.",
+    "cases": {
+      "success": "Asserts expected behavior with valid input.",
+      "edge_case_invalid_input": "Asserts handling of invalid or missing input."
+    }
+  },
+  "attach-citations-to-qa-responses": {
+    "test_file": "tests/test_attach-citations-to-qa-responses.py",
+    "description": "Verifies that Attach citations to QA responses.",
+    "cases": {
+      "success": "Asserts expected behavior with valid input.",
+      "edge_case_invalid_input": "Asserts handling of invalid or missing input."
+    }
+  },
+  "create-cli-command-to-display-citations": {
+    "test_file": "tests/test_create-cli-command-to-display-citations.py",
+    "description": "Verifies that Create CLI command to display citations.",
+    "cases": {
+      "success": "Asserts expected behavior with valid input.",
+      "edge_case_invalid_input": "Asserts handling of invalid or missing input."
     }
   }
 }

@@ -1,7 +1,9 @@
 # Sprint Board
 
-## Backlog
+## Sprint 2025-06-24
 | Task | Owner | Priority | Status |
 | --- | --- | --- | --- |
-| Establish a testing framework (`pytest`, etc.) with initial tests. | @agent | P0 | Done |
-
+| Design Citation data model | @agent | P1 | Done |
+| Extract citation anchors from filings | @agent | P1 | Done |
+| Attach citations to QA responses | @agent | P1 | Done |
+| Create CLI command to display citations | @agent | P1 | Done |
