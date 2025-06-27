@@ -8,8 +8,8 @@ RAG agent that answers questions about 10-K/10-Q filings and outputs citation-an
 - **Financial QA Engine**: Specialized RAG pipeline for 10-K/10-Q document analysis
 - **Risk Intelligence**: Sentiment analysis and risk-flag tagging of financial passages
 - **Citation Tracking**: Precise source attribution with section and page references
-- **Voice Interface**: Optional OpenAI TTS integration for audio responses
-- **Multi-Company Analysis**: Compare metrics and statements across multiple filings
+- **Voice Interface**: Optional text-to-speech output using `pyttsx3`
+- **Multi-Company Analysis**: Compare answers to the same question across multiple filings
 
 ## Getting Started
 
@@ -24,6 +24,8 @@ RAG agent that answers questions about 10-K/10-Q filings and outputs citation-an
 git clone https://github.com/yourusername/finchat-sec-qa.git
 cd finchat-sec-qa
 pip install -r requirements.txt
+# Install optional voice dependencies to use the --voice flag
+pip install '.[voice]'
 ```
 
 ### Configuration
@@ -49,6 +51,12 @@ python chat.py
 
 # Launch web interface
 streamlit run web_app.py
+
+# Answer a question from local text files
+python -m finchat_sec_qa.cli "What risks are highlighted?" aapl.txt
+
+# Speak the answer aloud
+python -m finchat_sec_qa.cli --voice "Summarize liquidity discussion" aapl.txt
 ```
 
 ## Example Queries
@@ -57,18 +65,40 @@ streamlit run web_app.py
 - "Compare revenue growth between MSFT and GOOGL over the last 3 quarters"
 - "Summarize management's discussion on supply chain challenges"
 
+### Multi-Company Example
+
+```python
+from finchat_sec_qa import compare_question_across_filings
+
+docs = {
+    "AAPL": open("aapl.txt").read(),
+    "MSFT": open("msft.txt").read(),
+}
+
+for ans in compare_question_across_filings("revenue guidance", docs):
+    print(ans.doc_id, ans.answer)
+```
+
 ## API Reference
 
 ```python
 from finchat import FinChatAgent
 
-agent = FinChatAgent()
-response = agent.query(
+agent = FinChatAgent("my-app/1.0")
+result = agent.query(
     question="What is the debt-to-equity ratio trend?",
     ticker="TSLA",
     filing_type="10-Q"
 )
+print(result.answer)
 ```
+
+For additional examples and advanced usage, see
+[API_USAGE_GUIDE.md](docs/API_USAGE_GUIDE.md).
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for a list of releases and notable changes.
 
 ## Architecture
 
@@ -82,8 +112,9 @@ response = agent.query(
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+4. Run `ruff check . --fix` and `bandit -r src -q` to ensure quality
+5. Push to the branch (`git push origin feature/amazing-feature`)
+6. Open a Pull Request
 
 ## License
 

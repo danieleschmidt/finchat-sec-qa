@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import List
 
 from .qa_engine import FinancialQAEngine
+from .voice_interface import speak
 
 
 def build_engine(docs: List[Path]) -> FinancialQAEngine:
@@ -20,11 +21,19 @@ def main(argv: List[str] | None = None) -> int:
     )
     parser.add_argument("question", help="Question to answer")
     parser.add_argument("documents", nargs="+", help="Paths to text documents")
+    parser.add_argument(
+        "-v",
+        "--voice",
+        action="store_true",
+        help="Speak the answer aloud",
+    )
     args = parser.parse_args(argv)
 
     engine = build_engine([Path(p) for p in args.documents])
     answer, citations = engine.answer_with_citations(args.question)
     print(answer)
+    if args.voice:
+        speak(answer)
     for c in citations:
         print(f"[{c.doc_id}] {c.text}")
     return 0

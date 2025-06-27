@@ -35,3 +35,16 @@ def test_edge_case_invalid_input():
         text=True,
     )
     assert result.returncode != 0
+
+
+def test_voice_option(tmp_path, monkeypatch, capsys):
+    doc = tmp_path / "a.txt"
+    doc.write_text("alpha beta")
+    spoken: list[str] = []
+    import finchat_sec_qa.cli as cli
+
+    monkeypatch.setattr(cli, "speak", lambda text: spoken.append(text))
+    cli.main(["--voice", "alpha", str(doc)])
+    captured = capsys.readouterr()
+    assert "alpha beta" in captured.out
+    assert spoken == ["alpha beta"]

@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-__all__ = ["echo"]
+from .agent import FinChatAgent, QueryResult
+
+__all__ = ["echo", "FinChatAgent", "QueryResult"]
 
 
 def echo(text: str | None) -> str:

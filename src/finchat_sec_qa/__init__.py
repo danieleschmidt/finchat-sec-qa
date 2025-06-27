@@ -5,6 +5,8 @@ from .qa_engine import DocumentChunk, FinancialQAEngine
 from .risk_intelligence import RiskAnalyzer, RiskAssessment
 from .citation import Citation, extract_citation_anchors
 from .cli import main as cli_main
+from .voice_interface import speak
+from .multi_company import CompanyAnswer, compare_question_across_filings
 
 __all__ = [
     "EdgarClient",
@@ -16,4 +18,7 @@ __all__ = [
     "Citation",
     "extract_citation_anchors",
     "cli_main",
+    "speak",
+    "CompanyAnswer",
+    "compare_question_across_filings",
 ]
