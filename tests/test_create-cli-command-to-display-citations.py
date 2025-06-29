@@ -12,6 +12,7 @@ def test_success(tmp_path):
             sys.executable,
             "-m",
             "finchat_sec_qa.cli",
+            "query",
             "gamma",
             str(doc1),
             str(doc2),
@@ -44,7 +45,7 @@ def test_voice_option(tmp_path, monkeypatch, capsys):
     import finchat_sec_qa.cli as cli
 
     monkeypatch.setattr(cli, "speak", lambda text: spoken.append(text))
-    cli.main(["--voice", "alpha", str(doc)])
+    cli.main(["query", "alpha", str(doc), "--voice"])
     captured = capsys.readouterr()
     assert "alpha beta" in captured.out
     assert spoken == ["alpha beta"]
