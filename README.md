@@ -24,6 +24,9 @@ RAG agent that answers questions about 10-K/10-Q filings and outputs citation-an
 git clone https://github.com/yourusername/finchat-sec-qa.git
 cd finchat-sec-qa
 pip install -r requirements.txt
+# Install dev tools
+pip install pre-commit
+pre-commit install
 # Install optional voice dependencies to use the --voice flag
 pip install '.[voice]'
 ```
@@ -63,7 +66,8 @@ python -m finchat_sec_qa.cli query --log-level DEBUG "key risks" filings/aapl.ht
 # Start REST API server
 uvicorn finchat_sec_qa.server:app --reload
 
-# The server persists its index under ~/.cache/finchat_sec_qa
+# The server persists its index under ~/.cache/finchat_sec_qa using
+# a joblib file. Any legacy .pkl files will be migrated automatically.
 
 # Start Flask web app (requires FINCHAT_TOKEN)
 python -m flask --app finchat_sec_qa.webapp run

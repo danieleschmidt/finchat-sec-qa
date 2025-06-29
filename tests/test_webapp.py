@@ -30,3 +30,17 @@ def test_query(monkeypatch, tmp_path):
         assert resp.status_code == 200
         assert 'alpha' in resp.json['answer']
 
+
+def test_query_invalid(monkeypatch):
+    monkeypatch.delenv("FINCHAT_TOKEN", raising=False)
+    with app.test_client() as client:
+        resp = client.post('/query', json={'ticker': 'AAPL'})
+        assert resp.status_code == 400
+
+
+def test_risk_invalid(monkeypatch):
+    monkeypatch.delenv("FINCHAT_TOKEN", raising=False)
+    with app.test_client() as client:
+        resp = client.post('/risk', json={'text': ''})
+        assert resp.status_code == 400
+

@@ -10,7 +10,7 @@ if TYPE_CHECKING:  # pragma: no cover - imported for type hints
 from sklearn.feature_extraction.text import TfidfVectorizer
 import numpy as np
 import logging
-import pickle  # nosec B403
+from joblib import dump, load
 
 
 @dataclass
@@ -22,7 +22,11 @@ class DocumentChunk:
 
 
 class FinancialQAEngine:
-    """Simple QA engine using TF-IDF retrieval over filing texts."""
+    """Simple QA engine using TF-IDF retrieval over filing texts.
+
+    The index is persisted via joblib to avoid pickle security issues.
+    Old ``.pkl`` indexes are migrated automatically on startup.
+    """
 
     logger = logging.getLogger(__name__)
 
@@ -33,6 +37,12 @@ class FinancialQAEngine:
         self.tfidf_matrix: np.ndarray | None = None
         if storage_path and storage_path.exists():
             self.load(storage_path)
+        elif storage_path and storage_path.with_suffix('.pkl').exists():
+            # migrate old pickle-based index
+            self.load(storage_path.with_suffix('.pkl'))
+            storage_path.with_suffix('.pkl').unlink()
+            self.storage_path = storage_path
+            self.save()
 
     def add_document(self, doc_id: str, text: str) -> None:
         """Add a document to the index."""
@@ -84,20 +94,18 @@ class FinancialQAEngine:
         if not target:
             return
         target.parent.mkdir(parents=True, exist_ok=True)
-        with target.open("wb") as fh:
-            pickle.dump(
-                {
-                    "vectorizer": self.vectorizer,
-                    "tfidf_matrix": self.tfidf_matrix,
-                    "chunks": self.chunks,
-                },
-                fh,
-            )
+        dump(
+            {
+                "vectorizer": self.vectorizer,
+                "tfidf_matrix": self.tfidf_matrix,
+                "chunks": self.chunks,
+            },
+            target,
+        )
 
     def load(self, path: Path) -> None:
         """Load a persisted vector store."""
-        with path.open("rb") as fh:
-            data = pickle.load(fh)  # nosec B301
+        data = load(path)
         self.vectorizer = data["vectorizer"]
         self.tfidf_matrix = data["tfidf_matrix"]
         self.chunks = data["chunks"]
