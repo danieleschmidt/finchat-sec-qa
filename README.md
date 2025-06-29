@@ -38,25 +38,35 @@ cp .env.example .env
 
 # Edit with your API keys
 nano .env
+
+# Cache directory is ~/.cache/finchat_sec_qa
 ```
 
 ### Usage
 
 ```bash
-# Download and index filings for a company
-python ingest_filings.py --ticker AAPL --years 2023,2024
+# Download latest filings for AAPL
+python -m finchat_sec_qa.cli ingest AAPL --dest filings/
 
-# Start interactive chat
-python chat.py
-
-# Launch web interface
-streamlit run web_app.py
-
-# Answer a question from local text files
-python -m finchat_sec_qa.cli "What risks are highlighted?" aapl.txt
+# Answer a question from text files
+python -m finchat_sec_qa.cli query "What risks?" filings/aapl.html
 
 # Speak the answer aloud
-python -m finchat_sec_qa.cli --voice "Summarize liquidity discussion" aapl.txt
+python -m finchat_sec_qa.cli query --voice "Summarize liquidity" filings/aapl.html
+
+# Assess risk in a text document
+python -m finchat_sec_qa.cli risk filings/aapl.html
+
+# Enable debug logging
+python -m finchat_sec_qa.cli query --log-level DEBUG "key risks" filings/aapl.html
+
+# Start REST API server
+uvicorn finchat_sec_qa.server:app --reload
+
+# The server persists its index under ~/.cache/finchat_sec_qa
+
+# Start Flask web app (requires FINCHAT_TOKEN)
+python -m flask --app finchat_sec_qa.webapp run
 ```
 
 ## Example Queries
@@ -109,12 +119,7 @@ See [CHANGELOG.md](CHANGELOG.md) for a list of releases and notable changes.
 
 ## Contributing
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Run `ruff check . --fix` and `bandit -r src -q` to ensure quality
-5. Push to the branch (`git push origin feature/amazing-feature`)
-6. Open a Pull Request
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development workflow and code style guidelines.
 
 ## License
 

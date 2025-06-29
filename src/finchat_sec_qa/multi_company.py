@@ -6,6 +6,9 @@ from dataclasses import dataclass
 from typing import Dict, List
 
 from .qa_engine import FinancialQAEngine
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -27,6 +30,7 @@ def compare_question_across_filings(
 
     results: List[CompanyAnswer] = []
     for doc_id, text in documents.items():
+        logger.debug("Processing document %s", doc_id)
         engine = FinancialQAEngine()
         engine.add_document(doc_id, text)
         answer, _ = engine.answer_with_citations(question)

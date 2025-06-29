@@ -43,7 +43,7 @@ class DummyEngine:
 
 
 def test_query(monkeypatch, tmp_path):
-    agent = FinChatAgent("ua", download_dir=tmp_path)
+    agent = FinChatAgent("ua", download_dir=tmp_path, engine_store=None)
     dummy_client = DummyClient()
     monkeypatch.setattr(agent, "client", dummy_client)
     monkeypatch.setattr(agent, "_make_engine", lambda: DummyEngine())
@@ -55,6 +55,6 @@ def test_query(monkeypatch, tmp_path):
 
 
 def test_invalid_question(tmp_path):
-    agent = FinChatAgent("ua", download_dir=tmp_path)
+    agent = FinChatAgent("ua", download_dir=tmp_path, engine_store=None)
     with pytest.raises(ValueError):
         agent.query("", "AAPL")
