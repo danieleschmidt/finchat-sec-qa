@@ -66,3 +66,25 @@ def test_download_filing(monkeypatch, tmp_path: Path):
     assert path.exists()
     assert path.read_bytes() == content
 
+
+
+def test_download_filing_cache(monkeypatch, tmp_path: Path):
+    calls = []
+
+    def fake_get(self, url):
+        calls.append(url)
+        return DummyResponse(content=b"c")
+
+    monkeypatch.setattr(EdgarClient, "_get", fake_get)
+    client = EdgarClient("ua", cache_dir=tmp_path)
+    filing = FilingMetadata(
+        cik="0000320193",
+        accession_no="0000320193-24-000050",
+        form_type="10-K",
+        filing_date=date.today(),
+        document_url="https://example.com/aapl-20241030.htm",
+    )
+    path1 = client.download_filing(filing)
+    path2 = client.download_filing(filing)
+    assert path1 == path2
+    assert calls == [filing.document_url]
