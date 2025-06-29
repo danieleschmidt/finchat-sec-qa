@@ -5,7 +5,7 @@ from pathlib import Path
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, constr
 
 from .edgar_client import EdgarClient
 from .qa_engine import FinancialQAEngine
@@ -20,7 +20,7 @@ async def lifespan(app: FastAPI):
     cache = Path.home() / ".cache" / "finchat_sec_qa"
     cache.mkdir(parents=True, exist_ok=True)
     app.state.client = EdgarClient("FinChatBot")
-    app.state.engine = FinancialQAEngine(storage_path=cache / "index.pkl")
+    app.state.engine = FinancialQAEngine(storage_path=cache / "index.joblib")
     try:
         yield
     finally:
@@ -37,8 +37,8 @@ risk = RiskAnalyzer()
 
 
 class QueryRequest(BaseModel):
-    question: str
-    ticker: str
+    question: constr(min_length=1)
+    ticker: constr(min_length=1, max_length=5, pattern=r"^[A-Za-z]{1,5}$")
     form_type: str = "10-K"
 
 
@@ -64,7 +64,7 @@ def query(req: QueryRequest):
 
 
 class RiskRequest(BaseModel):
-    text: str
+    text: constr(min_length=1)
 
 
 @app.post("/risk")

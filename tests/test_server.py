@@ -21,10 +21,18 @@ class DummyClient:
 def test_query_endpoint(tmp_path):
     with TestClient(app) as client:
         app.state.client = DummyClient(tmp_path / "f.html")
-        app.state.engine = FinancialQAEngine(storage_path=tmp_path / "i.pkl")
+        app.state.engine = FinancialQAEngine(storage_path=tmp_path / "i.joblib")
         resp = client.post('/query', json={'question': 'alpha?', 'ticker': 'AAPL'})
         assert resp.status_code == 200
         assert 'alpha' in resp.json()['answer']
+
+
+def test_query_invalid_payload(tmp_path):
+    with TestClient(app) as client:
+        app.state.client = DummyClient(tmp_path / 'f.html')
+        app.state.engine = FinancialQAEngine(storage_path=tmp_path / 'i.joblib')
+        resp = client.post('/query', json={'ticker': 'AAPL'})
+        assert resp.status_code == 422
 
 
 def test_risk_endpoint():
@@ -34,8 +42,14 @@ def test_risk_endpoint():
         assert 'litigation' in resp.json()['flags']
 
 
+def test_risk_invalid_payload():
+    with TestClient(app) as client:
+        resp = client.post('/risk', json={'text': ''})
+        assert resp.status_code == 422
+
+
 def test_engine_saved_on_shutdown(tmp_path):
-    idx = tmp_path / 'i.pkl'
+    idx = tmp_path / 'i.joblib'
 
     class DummyEngine(FinancialQAEngine):
         def __init__(self, path):

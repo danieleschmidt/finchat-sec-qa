@@ -10,6 +10,7 @@ dependencies = [
     "requests",
     "scikit-learn",
     "numpy",
+    "joblib",
     "vaderSentiment",
     "fastapi",
     "uvicorn",
@@ -18,6 +19,7 @@ dependencies = [
 
 [project.optional-dependencies]
 voice = ["pyttsx3"]
+dev = ["pre-commit"]
 
 [tool.setuptools]
 package-dir = {"" = "src"}

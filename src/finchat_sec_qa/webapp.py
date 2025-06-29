@@ -4,6 +4,7 @@ import os
 import atexit
 from pathlib import Path
 from flask import Flask, request, abort, jsonify
+from .server import QueryRequest, RiskRequest
 
 from .edgar_client import EdgarClient
 from .qa_engine import FinancialQAEngine
@@ -16,7 +17,7 @@ configure_logging("INFO")
 SECRET_TOKEN = os.getenv("FINCHAT_TOKEN")
 client = EdgarClient("FinChatWeb")
 engine = FinancialQAEngine(
-    storage_path=Path(os.path.expanduser("~/.cache/finchat_sec_qa/index.pkl"))
+    storage_path=Path(os.path.expanduser("~/.cache/finchat_sec_qa/index.joblib"))
 )
 risk = RiskAnalyzer()
 
@@ -32,17 +33,17 @@ def _auth() -> None:
 def query() -> object:
     _auth()
     data = request.json or {}
-    question = data.get("question")
-    ticker = data.get("ticker")
-    if not question or not ticker:
+    try:
+        req = QueryRequest(**data)
+    except Exception:
         abort(400)
-    filings = client.get_recent_filings(ticker, limit=1)
+    filings = client.get_recent_filings(req.ticker, limit=1)
     if not filings:
         abort(404)
     path = client.download_filing(filings[0])
     text = Path(path).read_text()
     engine.add_document(filings[0].accession_no, text)
-    answer, cites = engine.answer_with_citations(question)
+    answer, cites = engine.answer_with_citations(req.question)
     return jsonify({"answer": answer, "citations": [c.__dict__ for c in cites]})
 
 
@@ -50,6 +51,9 @@ def query() -> object:
 def risk_endpoint() -> object:
     _auth()
     data = request.json or {}
-    text = data.get("text", "")
-    assessment = risk.assess(text)
+    try:
+        req = RiskRequest(**data)
+    except Exception:
+        abort(400)
+    assessment = risk.assess(req.text)
     return jsonify({"sentiment": assessment.sentiment, "flags": assessment.flags})
