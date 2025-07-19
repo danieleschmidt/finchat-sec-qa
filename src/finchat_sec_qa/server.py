@@ -5,7 +5,7 @@ from pathlib import Path
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, constr
+from pydantic import BaseModel, constr, validator
 
 from .edgar_client import EdgarClient
 from .qa_engine import FinancialQAEngine
@@ -38,8 +38,14 @@ risk = RiskAnalyzer()
 
 class QueryRequest(BaseModel):
     question: constr(min_length=1)
-    ticker: constr(min_length=1, max_length=5, pattern=r"^[A-Za-z]{1,5}$")
+    ticker: constr(min_length=1, max_length=5)
     form_type: str = "10-K"
+    
+    @validator('ticker')
+    def ticker_must_be_alpha(cls, v):
+        if not v.isalpha():
+            raise ValueError('ticker must contain only letters')
+        return v.upper()
 
 
 
