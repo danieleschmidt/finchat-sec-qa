@@ -37,15 +37,58 @@ risk = RiskAnalyzer()
 
 
 class QueryRequest(BaseModel):
-    question: constr(min_length=1)
+    question: constr(min_length=1, max_length=1000)
     ticker: constr(min_length=1, max_length=5)
     form_type: str = "10-K"
     
     @validator('ticker')
-    def ticker_must_be_alpha(cls, v):
-        if not v.isalpha():
-            raise ValueError('ticker must contain only letters')
-        return v.upper()
+    def ticker_must_be_valid(cls, v):
+        import re
+        if not v or not isinstance(v, str):
+            raise ValueError('ticker must be a non-empty string')
+        
+        v = v.strip().upper()
+        
+        # Strict validation: 1-5 uppercase letters only, no special characters
+        if not re.match(r'^[A-Z]{1,5}$', v):
+            raise ValueError('ticker must be 1-5 uppercase letters only (A-Z)')
+        
+        # Additional check against known ticker patterns to prevent injection
+        if any(char in v for char in ['<', '>', '&', '"', "'", '/', '\\', '%']):
+            raise ValueError('ticker contains invalid characters')
+            
+        return v
+    
+    @validator('form_type')
+    def form_type_must_be_valid(cls, v):
+        import re
+        if not v or not isinstance(v, str):
+            raise ValueError('form_type must be a non-empty string')
+        
+        v = v.strip()
+        
+        # Validate form type format: alphanumeric and hyphens only, reasonable length
+        if not re.match(r'^[A-Z0-9-]{1,10}$', v):
+            raise ValueError('form_type must be 1-10 characters, alphanumeric and hyphens only')
+            
+        return v
+    
+    @validator('question')
+    def question_must_be_safe(cls, v):
+        if not v or not isinstance(v, str):
+            raise ValueError('question must be a non-empty string')
+        
+        v = v.strip()
+        
+        # Basic XSS protection - reject obvious script injection attempts
+        dangerous_patterns = ['<script', 'javascript:', 'vbscript:', 'onload=', 'onerror=', 'onclick=']
+        v_lower = v.lower()
+        
+        for pattern in dangerous_patterns:
+            if pattern in v_lower:
+                raise ValueError('question contains potentially dangerous content')
+        
+        return v
 
 
 
@@ -70,7 +113,24 @@ def query(req: QueryRequest):
 
 
 class RiskRequest(BaseModel):
-    text: constr(min_length=1)
+    text: constr(min_length=1, max_length=50000)  # Set reasonable upper limit
+    
+    @validator('text')
+    def text_must_be_safe(cls, v):
+        if not v or not isinstance(v, str):
+            raise ValueError('text must be a non-empty string')
+        
+        v = v.strip()
+        
+        # Basic XSS protection - reject obvious script injection attempts
+        dangerous_patterns = ['<script', 'javascript:', 'vbscript:', 'onload=', 'onerror=', 'onclick=']
+        v_lower = v.lower()
+        
+        for pattern in dangerous_patterns:
+            if pattern in v_lower:
+                raise ValueError('text contains potentially dangerous content')
+        
+        return v
 
 
 @app.post("/risk")
