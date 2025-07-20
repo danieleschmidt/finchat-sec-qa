@@ -65,21 +65,23 @@
 
 ## Medium Priority Items (WSJF 1.0-2.0)
 
-### 6. Create Centralized Configuration Management
+### 6. ✅ Create Centralized Configuration Management - COMPLETED
 - **File**: Multiple files with hardcoded values
 - **Value**: 7 | **Criticality**: 6 | **Risk**: 8 | **Size**: 5
 - **WSJF**: 4.20
 - **Description**: Extract hardcoded configuration values (rate limits, timeouts, string lengths) into a central config module with environment variable support
+- **Status**: ✅ **COMPLETED** - Comprehensive config system with env var support (commit 4d3407a)
 - **Effort**: 4-6 hours
 - **Risk**: Medium
 
-### 7. Improve Resource Management
-- **File**: `src/finchat_sec_qa/webapp.py:24`, `src/finchat_sec_qa/server.py:27-31`
-- **Value**: 5 | **Criticality**: 4 | **Risk**: 6 | **Size**: 6
-- **WSJF**: 2.50
-- **Description**: Replace atexit with proper context managers and async cleanup
-- **Effort**: 6-8 hours
-- **Risk**: Medium
+### 7. ✅ Improve Resource Management in Flask WebApp - COMPLETED
+- **File**: `src/finchat_sec_qa/webapp.py:107`
+- **Value**: 6 | **Criticality**: 5 | **Risk**: 7 | **Size**: 4
+- **WSJF**: 4.50
+- **Description**: Replace atexit with proper Flask teardown handlers for robust resource cleanup
+- **Status**: ✅ **COMPLETED** - Implemented Flask teardown handlers with error handling (commit c98eaa3)
+- **Effort**: 3-4 hours
+- **Risk**: Low
 
 ### 7. Add Comprehensive Type Annotations
 - **File**: `src/finchat_sec_qa/webapp.py:33,51` and multiple other files
