@@ -9,7 +9,16 @@
 
 ## High Priority Items (WSJF > 2.0)
 
-### 1. ✅ Replace Print Statements with Structured Logging - COMPLETED
+### 1. Fix Inefficient Multi-Company Analysis Performance
+- **File**: `src/finchat_sec_qa/multi_company.py:34-36`
+- **Value**: 9 | **Criticality**: 8 | **Risk**: 8 | **Size**: 3
+- **WSJF**: 8.33
+- **Description**: Refactor to use single QA engine instance with bulk operations instead of creating new engine per document
+- **Status**: 🚀 **IN PROGRESS** - Critical performance optimization
+- **Effort**: 2-3 hours
+- **Risk**: Low
+
+### 2. ✅ Replace Print Statements with Structured Logging - COMPLETED
 - **File**: `src/finchat_sec_qa/cli.py:30,34,54,56`
 - **Value**: 7 | **Criticality**: 6 | **Risk**: 7 | **Size**: 3
 - **WSJF**: 6.67
