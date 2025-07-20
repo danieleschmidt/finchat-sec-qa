@@ -9,12 +9,12 @@
 
 ## High Priority Items (WSJF > 2.0)
 
-### 1. Fix Inefficient Multi-Company Analysis Performance
+### 1. ✅ Fix Inefficient Multi-Company Analysis Performance - COMPLETED
 - **File**: `src/finchat_sec_qa/multi_company.py:34-36`
 - **Value**: 9 | **Criticality**: 8 | **Risk**: 8 | **Size**: 3
 - **WSJF**: 8.33
 - **Description**: Refactor to use single QA engine instance with bulk operations instead of creating new engine per document
-- **Status**: 🚀 **IN PROGRESS** - Critical performance optimization
+- **Status**: ✅ **COMPLETED** - Optimized to use single engine instance with bulk operations (commit 46ca6e6)
 - **Effort**: 2-3 hours
 - **Risk**: Low
 
@@ -65,7 +65,15 @@
 
 ## Medium Priority Items (WSJF 1.0-2.0)
 
-### 6. Improve Resource Management
+### 6. Create Centralized Configuration Management
+- **File**: Multiple files with hardcoded values
+- **Value**: 7 | **Criticality**: 6 | **Risk**: 8 | **Size**: 5
+- **WSJF**: 4.20
+- **Description**: Extract hardcoded configuration values (rate limits, timeouts, string lengths) into a central config module with environment variable support
+- **Effort**: 4-6 hours
+- **Risk**: Medium
+
+### 7. Improve Resource Management
 - **File**: `src/finchat_sec_qa/webapp.py:24`, `src/finchat_sec_qa/server.py:27-31`
 - **Value**: 5 | **Criticality**: 4 | **Risk**: 6 | **Size**: 6
 - **WSJF**: 2.50
