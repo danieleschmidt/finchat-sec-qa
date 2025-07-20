@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Tuple
+from contextlib import contextmanager
 
 if TYPE_CHECKING:  # pragma: no cover - imported for type hints
     from .citation import Citation
@@ -35,6 +36,7 @@ class FinancialQAEngine:
         self.vectorizer = TfidfVectorizer(stop_words="english")
         self.chunks: List[DocumentChunk] = []
         self.tfidf_matrix: np.ndarray | None = None
+        self._bulk_mode = False
         if storage_path and storage_path.exists():
             self.load(storage_path)
         elif storage_path and storage_path.with_suffix('.pkl').exists():
@@ -48,7 +50,27 @@ class FinancialQAEngine:
         """Add a document to the index."""
         self.logger.debug("Adding document %s", doc_id)
         self.chunks.append(DocumentChunk(doc_id, text))
-        self._rebuild_index()
+        if not self._bulk_mode:
+            self._rebuild_index()
+
+    def add_documents(self, documents: List[Tuple[str, str]]) -> None:
+        """Add multiple documents efficiently using bulk operations."""
+        with self.bulk_operation():
+            for doc_id, text in documents:
+                self.add_document(doc_id, text)
+
+    @contextmanager
+    def bulk_operation(self):
+        """Context manager for bulk operations that rebuilds index only once."""
+        if self._bulk_mode:
+            raise RuntimeError("Already in bulk operation mode")
+        
+        self._bulk_mode = True
+        try:
+            yield
+        finally:
+            self._bulk_mode = False
+            self._rebuild_index()
 
     def _rebuild_index(self) -> None:
         texts = [c.text for c in self.chunks]
