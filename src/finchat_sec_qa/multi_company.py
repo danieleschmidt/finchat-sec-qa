@@ -28,11 +28,20 @@ def compare_question_across_filings(
     if not documents:
         raise ValueError("documents must be provided")
 
+    logger.debug("Processing %d documents with single QA engine", len(documents))
+    
+    # Create single QA engine instance for better performance
+    engine = FinancialQAEngine()
+    
+    # Add all documents at once using bulk operations
+    documents_list = [(doc_id, text) for doc_id, text in documents.items()]
+    engine.add_documents(documents_list)
+    
+    # Query each document to get answers
     results: List[CompanyAnswer] = []
-    for doc_id, text in documents.items():
-        logger.debug("Processing document %s", doc_id)
-        engine = FinancialQAEngine()
-        engine.add_document(doc_id, text)
+    for doc_id in documents.keys():
+        logger.debug("Querying document %s", doc_id)
         answer, _ = engine.answer_with_citations(question)
         results.append(CompanyAnswer(doc_id=doc_id, answer=answer))
+    
     return results
