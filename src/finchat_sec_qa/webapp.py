@@ -18,13 +18,15 @@ from .edgar_client import EdgarClient
 from .qa_engine import FinancialQAEngine
 from .risk_intelligence import RiskAnalyzer
 from .logging_utils import configure_logging
+from .config import get_config
 
 class RateLimiter:
     """Rate limiting with sliding window."""
     
-    def __init__(self, max_requests: int = 100, window_seconds: int = 3600):
-        self.max_requests = max_requests
-        self.window_seconds = window_seconds
+    def __init__(self, max_requests: int = None, window_seconds: int = None):
+        config = get_config()
+        self.max_requests = max_requests or config.RATE_LIMIT_MAX_REQUESTS
+        self.window_seconds = window_seconds or config.RATE_LIMIT_WINDOW_SECONDS
         self.requests: Dict[str, List[float]] = defaultdict(list)
     
     def is_allowed(self, client_id: str) -> bool:
@@ -57,10 +59,11 @@ class BruteForceProtection:
         now = time.time()
         self.failed_attempts[client_id].append(now)
         
-        # Keep only recent attempts (last hour)
+        # Keep only recent attempts within lockout duration
+        config = get_config()
         self.failed_attempts[client_id] = [
             attempt for attempt in self.failed_attempts[client_id]
-            if now - attempt < 3600
+            if now - attempt < config.LOCKOUT_DURATION_SECONDS
         ]
     
     def record_successful_attempt(self, client_id: str) -> None:
@@ -71,15 +74,16 @@ class BruteForceProtection:
     
     def is_blocked(self, client_id: str) -> bool:
         """Check if client is temporarily blocked due to brute force."""
+        config = get_config()
         now = time.time()
         failed_count = len(self.failed_attempts[client_id])
         
-        if failed_count < 3:
+        if failed_count < config.FAILED_ATTEMPTS_LOCKOUT_THRESHOLD:
             return False
         
-        # Exponential backoff: 2^(attempts-3) minutes
+        # Exponential backoff: base^(attempts-threshold) * unit_seconds
         last_attempt = max(self.failed_attempts[client_id]) if self.failed_attempts[client_id] else 0
-        backoff_seconds = (2 ** (failed_count - 3)) * 60
+        backoff_seconds = (config.EXPONENTIAL_BACKOFF_BASE ** (failed_count - config.FAILED_ATTEMPTS_LOCKOUT_THRESHOLD)) * config.EXPONENTIAL_BACKOFF_UNIT_SECONDS
         
         return now - last_attempt < backoff_seconds
 
@@ -88,7 +92,8 @@ app = Flask(__name__)
 configure_logging("INFO")
 logger = logging.getLogger(__name__)
 
-SECRET_TOKEN = os.getenv("FINCHAT_TOKEN")
+config = get_config()
+SECRET_TOKEN = config.SECRET_TOKEN
 client = EdgarClient("FinChatWeb")
 engine = FinancialQAEngine(
     storage_path=Path(os.path.expanduser("~/.cache/finchat_sec_qa/index.joblib"))
@@ -96,7 +101,7 @@ engine = FinancialQAEngine(
 risk = RiskAnalyzer()
 
 # Security components
-rate_limiter = RateLimiter(max_requests=100, window_seconds=3600)  # 100 requests per hour
+rate_limiter = RateLimiter()  # Uses config defaults
 brute_force_protection = BruteForceProtection()
 
 atexit.register(engine.save)
@@ -108,7 +113,7 @@ def validate_token_strength(token: str) -> bool:
         return False
     
     # Minimum length
-    if len(token) < 16:
+    if len(token) < config.MIN_TOKEN_LENGTH:
         return False
     
     # Must contain mix of characters
@@ -117,8 +122,8 @@ def validate_token_strength(token: str) -> bool:
     has_digit = bool(re.search(r'\d', token))
     has_special = bool(re.search(r'[!@#$%^&*(),.?":{}|<>]', token))
     
-    # At least 3 of 4 character types
-    return sum([has_upper, has_lower, has_digit, has_special]) >= 3
+    # At least MIN_PASSWORD_CRITERIA of 4 character types
+    return sum([has_upper, has_lower, has_digit, has_special]) >= config.MIN_PASSWORD_CRITERIA
 
 
 def _validate_token_constant_time(provided_token: str, expected_token: str) -> bool:
@@ -187,8 +192,8 @@ def add_security_headers(response):
     """Add security headers to all responses."""
     response.headers['X-Content-Type-Options'] = 'nosniff'
     response.headers['X-Frame-Options'] = 'DENY'
-    response.headers['X-XSS-Protection'] = '1; mode=block'
-    response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    response.headers['X-XSS-Protection'] = config.XSS_PROTECTION_MODE
+    response.headers['Strict-Transport-Security'] = f'max-age={config.HSTS_MAX_AGE}; includeSubDomains'
     response.headers['Content-Security-Policy'] = "default-src 'self'"
     return response
 

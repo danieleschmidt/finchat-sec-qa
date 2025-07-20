@@ -11,6 +11,7 @@ from .edgar_client import EdgarClient
 from .qa_engine import FinancialQAEngine
 from .risk_intelligence import RiskAnalyzer
 from .logging_utils import configure_logging
+from .config import get_config
 
 
 @asynccontextmanager
@@ -36,59 +37,82 @@ app = FastAPI(lifespan=lifespan)
 risk = RiskAnalyzer()
 
 
-class QueryRequest(BaseModel):
-    question: constr(min_length=1, max_length=1000)
-    ticker: constr(min_length=1, max_length=5)
-    form_type: str = "10-K"
+def _get_query_request_model():
+    """Create QueryRequest model with config-based constraints."""
+    config = get_config()
     
-    @validator('ticker')
-    def ticker_must_be_valid(cls, v):
-        import re
-        if not v or not isinstance(v, str):
-            raise ValueError('ticker must be a non-empty string')
+    class QueryRequest(BaseModel):
+        question: constr(min_length=1, max_length=config.MAX_QUESTION_LENGTH)
+        ticker: constr(min_length=1, max_length=config.MAX_TICKER_LENGTH)
+        form_type: str = "10-K"
         
-        v = v.strip().upper()
-        
-        # Strict validation: 1-5 uppercase letters only, no special characters
-        if not re.match(r'^[A-Z]{1,5}$', v):
-            raise ValueError('ticker must be 1-5 uppercase letters only (A-Z)')
-        
-        # Additional check against known ticker patterns to prevent injection
-        if any(char in v for char in ['<', '>', '&', '"', "'", '/', '\\', '%']):
-            raise ValueError('ticker contains invalid characters')
+        @validator('ticker')
+        def ticker_must_be_valid(cls, v):
+            import re
+            if not v or not isinstance(v, str):
+                raise ValueError('ticker must be a non-empty string')
             
-        return v
-    
-    @validator('form_type')
-    def form_type_must_be_valid(cls, v):
-        import re
-        if not v or not isinstance(v, str):
-            raise ValueError('form_type must be a non-empty string')
-        
-        v = v.strip()
-        
-        # Validate form type format: alphanumeric and hyphens only, reasonable length
-        if not re.match(r'^[A-Z0-9-]{1,10}$', v):
-            raise ValueError('form_type must be 1-10 characters, alphanumeric and hyphens only')
+            v = v.strip().upper()
             
-        return v
+            # Strict validation: 1-MAX_TICKER_LENGTH uppercase letters only, no special characters
+            pattern = f'^[A-Z]{{1,{config.MAX_TICKER_LENGTH}}}$'
+            if not re.match(pattern, v):
+                raise ValueError(f'ticker must be 1-{config.MAX_TICKER_LENGTH} uppercase letters only (A-Z)')
+            
+            # Additional check against known ticker patterns to prevent injection
+            if any(char in v for char in ['<', '>', '&', '"', "'", '/', '\\', '%']):
+                raise ValueError('ticker contains invalid characters')
+            
+            return v
+        
+        @validator('form_type')
+        def form_type_must_be_valid(cls, v):
+            import re
+            if not v or not isinstance(v, str):
+                raise ValueError('form_type must be a non-empty string')
+            
+            v = v.strip().upper()
+            
+            # Allow alphanumeric and hyphens, reasonable length limit
+            pattern = f'^[A-Z0-9-]{{1,{config.MAX_FORM_TYPE_LENGTH}}}$'
+            if not re.match(pattern, v):
+                raise ValueError(f'form_type must be 1-{config.MAX_FORM_TYPE_LENGTH} characters, alphanumeric and hyphens only')
+            
+            return v
+        
+        @validator('question')
+        def question_must_be_safe(cls, v):
+            if not v or not isinstance(v, str):
+                raise ValueError('question must be a non-empty string')
+            
+            v = v.strip()
+            
+            # Basic XSS protection - reject obvious script injection attempts
+            dangerous_patterns = ['<script', 'javascript:', 'vbscript:', 'onload=', 'onerror=', 'onclick=']
+            v_lower = v.lower()
+            
+            for pattern in dangerous_patterns:
+                if pattern in v_lower:
+                    raise ValueError('question contains potentially dangerous content')
+            
+            return v
     
-    @validator('question')
-    def question_must_be_safe(cls, v):
-        if not v or not isinstance(v, str):
-            raise ValueError('question must be a non-empty string')
-        
-        v = v.strip()
-        
-        # Basic XSS protection - reject obvious script injection attempts
-        dangerous_patterns = ['<script', 'javascript:', 'vbscript:', 'onload=', 'onerror=', 'onclick=']
-        v_lower = v.lower()
-        
-        for pattern in dangerous_patterns:
-            if pattern in v_lower:
-                raise ValueError('question contains potentially dangerous content')
-        
-        return v
+    return QueryRequest
+
+
+def _get_risk_request_model():
+    """Create RiskRequest model with config-based constraints."""
+    config = get_config()
+    
+    class RiskRequest(BaseModel):
+        text: constr(min_length=1, max_length=config.MAX_TEXT_INPUT_LENGTH)
+    
+    return RiskRequest
+
+
+# Create models using current config
+QueryRequest = _get_query_request_model()
+RiskRequest = _get_risk_request_model()
 
 
 
