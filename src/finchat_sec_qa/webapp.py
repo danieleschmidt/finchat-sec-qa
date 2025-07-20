@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-import atexit
 import logging
 import time
 import hmac
@@ -104,7 +103,17 @@ risk = RiskAnalyzer()
 rate_limiter = RateLimiter()  # Uses config defaults
 brute_force_protection = BruteForceProtection()
 
-atexit.register(engine.save)
+# Resource cleanup using Flask teardown handlers instead of atexit
+@app.teardown_appcontext
+def cleanup_resources(exception):
+    """Clean up resources when application context tears down."""
+    try:
+        logger.debug("Cleaning up resources")
+        if engine is not None:
+            engine.save()
+            logger.debug("QA engine saved successfully")
+    except Exception as e:
+        logger.error("Error during resource cleanup: %s", e)
 
 
 def validate_token_strength(token: str) -> bool:
