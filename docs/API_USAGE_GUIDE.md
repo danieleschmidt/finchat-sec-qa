@@ -34,6 +34,8 @@ print(path)
 
 ## Question Answering
 
+### Basic Usage
+
 ```python
 from finchat_sec_qa import FinancialQAEngine
 
@@ -44,6 +46,33 @@ print(answer)
 for c in citations:
     print(c.doc_id, c.text)
 ```
+
+### Bulk Document Addition (Optimized)
+
+For adding multiple documents efficiently, use bulk operations to avoid rebuilding the index after each document:
+
+```python
+from finchat_sec_qa import FinancialQAEngine
+
+engine = FinancialQAEngine()
+
+# Option 1: Use the bulk context manager
+with engine.bulk_operation():
+    engine.add_document("aapl", open("aapl.txt").read())
+    engine.add_document("msft", open("msft.txt").read())
+    engine.add_document("googl", open("googl.txt").read())
+# Index is rebuilt only once when the context exits
+
+# Option 2: Use the convenience method
+documents = [
+    ("aapl", open("aapl.txt").read()),
+    ("msft", open("msft.txt").read()),
+    ("googl", open("googl.txt").read()),
+]
+engine.add_documents(documents)  # Automatically uses bulk operations
+```
+
+**Performance Note**: Bulk operations provide significant performance improvements when adding multiple documents, as the vector index is rebuilt only once instead of after each document addition.
 
 ## Multi-Company Analysis
 
