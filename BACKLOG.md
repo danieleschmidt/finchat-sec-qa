@@ -83,19 +83,21 @@
 - **Effort**: 3-4 hours
 - **Risk**: Low
 
-### 7. Add Comprehensive Type Annotations
+### 7. ✅ Add Comprehensive Type Annotations - COMPLETED
 - **File**: `src/finchat_sec_qa/webapp.py:33,51` and multiple other files
 - **Value**: 4 | **Criticality**: 3 | **Risk**: 5 | **Size**: 7
 - **WSJF**: 1.71
 - **Description**: Add return type annotations and improve type safety
+- **Status**: ✅ **COMPLETED** - Added comprehensive type annotations across all modules, fixed constr syntax, set up mypy type checking
 - **Effort**: 8-10 hours
 - **Risk**: Low
 
-### 8. Fix Citation Position Accuracy
+### 8. ✅ Fix Citation Position Accuracy - COMPLETED
 - **File**: `src/finchat_sec_qa/qa_engine.py:87`
 - **Value**: 6 | **Criticality**: 4 | **Risk**: 5 | **Size**: 8
 - **WSJF**: 1.88
 - **Description**: Implement accurate citation positioning instead of hardcoded values
+- **Status**: ✅ **COMPLETED** - Implemented text chunking with position tracking and accurate citation positions
 - **Effort**: 8-12 hours
 - **Risk**: High
 
@@ -138,5 +140,5 @@
 - Item #3 (input validation) depends on understanding current API usage patterns
 - Item #8 (citation accuracy) may require changes to the embedding/retrieval pipeline
 
-Last Updated: 2025-07-19
+Last Updated: 2025-07-21
 Next Review: Weekly during sprint planning

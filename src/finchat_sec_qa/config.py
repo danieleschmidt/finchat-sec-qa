@@ -53,6 +53,14 @@ class Config:
             'FINCHAT_MAX_TEXT_INPUT_LENGTH', 50000
         )
         
+        # Text chunking configuration
+        self.CHUNK_SIZE = self._get_int_env(
+            'FINCHAT_CHUNK_SIZE', 1000  # Characters per chunk
+        )
+        self.CHUNK_OVERLAP = self._get_int_env(
+            'FINCHAT_CHUNK_OVERLAP', 200  # Overlap between chunks
+        )
+        
         # Security headers
         self.HSTS_MAX_AGE = self._get_int_env(
             'FINCHAT_HSTS_MAX_AGE', 31536000  # 1 year
@@ -116,6 +124,15 @@ class Config:
         
         if self.MAX_TEXT_INPUT_LENGTH <= 0:
             raise ValueError("MAX_TEXT_INPUT_LENGTH must be positive")
+        
+        if self.CHUNK_SIZE <= 0:
+            raise ValueError("CHUNK_SIZE must be positive")
+        
+        if self.CHUNK_OVERLAP < 0:
+            raise ValueError("CHUNK_OVERLAP must be non-negative")
+        
+        if self.CHUNK_OVERLAP >= self.CHUNK_SIZE:
+            raise ValueError("CHUNK_OVERLAP must be less than CHUNK_SIZE")
 
 
 # Singleton instance for consistent configuration across the application

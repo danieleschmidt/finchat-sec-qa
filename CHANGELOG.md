@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.3] - 2025-07-21
+### Added
+- Accurate citation positioning with text chunking
+- Configurable chunk size and overlap parameters (FINCHAT_CHUNK_SIZE, FINCHAT_CHUNK_OVERLAP)
+- Intelligent text chunking that respects sentence boundaries
+- Comprehensive test coverage for citation position accuracy
+- Complete type annotations across all modules
+- MyPy type checking integration with proper configuration
+### Changed
+- DocumentChunk now includes start_pos and end_pos for position tracking
+- Citations now reference actual text positions instead of hardcoded values
+- Improved TF-IDF indexing to handle empty documents gracefully
+- Enhanced Pydantic model validation with proper string constraints
+- Updated constr usage for compatibility with newer Pydantic versions
+
 ## [1.3.2] - 2025-07-27
 ### Added
 - Engine state now persisted on shutdown for REST server and Flask webapp
