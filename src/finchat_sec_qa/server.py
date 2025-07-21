@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Type, Dict, Any, List
 
 from contextlib import asynccontextmanager
 
@@ -37,14 +38,35 @@ app = FastAPI(lifespan=lifespan)
 risk = RiskAnalyzer()
 
 
-def _get_query_request_model():
+def _get_query_request_model() -> Type[BaseModel]:
     """Create QueryRequest model with config-based constraints."""
     config = get_config()
     
     class QueryRequest(BaseModel):
-        question: constr(min_length=1, max_length=config.MAX_QUESTION_LENGTH)
-        ticker: constr(min_length=1, max_length=config.MAX_TICKER_LENGTH)
+        question: str
+        ticker: str
         form_type: str = "10-K"
+        
+        @validator('question')
+        def question_must_be_valid(cls, v):
+            if not v or not isinstance(v, str):
+                raise ValueError('question must be a non-empty string')
+            
+            v = v.strip()
+            if len(v) == 0:
+                raise ValueError('question cannot be empty')
+            if len(v) > get_config().MAX_QUESTION_LENGTH:
+                raise ValueError(f'question too long (max {get_config().MAX_QUESTION_LENGTH} chars)')
+            
+            # Basic XSS protection - reject obvious script injection attempts  
+            dangerous_patterns = ['<script', 'javascript:', 'vbscript:', 'onload=', 'onerror=', 'onclick=']
+            v_lower = v.lower()
+            
+            for pattern in dangerous_patterns:
+                if pattern in v_lower:
+                    raise ValueError('question contains potentially dangerous content')
+            
+            return v
         
         @validator('ticker')
         def ticker_must_be_valid(cls, v):
@@ -100,26 +122,47 @@ def _get_query_request_model():
     return QueryRequest
 
 
-def _get_risk_request_model():
+def _get_risk_request_model() -> Type[BaseModel]:
     """Create RiskRequest model with config-based constraints."""
     config = get_config()
     
     class RiskRequest(BaseModel):
-        text: constr(min_length=1, max_length=config.MAX_TEXT_INPUT_LENGTH)
+        text: str
+        
+        @validator('text')
+        def text_must_be_safe(cls, v):
+            if not v or not isinstance(v, str):
+                raise ValueError('text must be a non-empty string')
+            
+            v = v.strip()
+            if len(v) == 0:
+                raise ValueError('text cannot be empty')
+            if len(v) > config.MAX_TEXT_INPUT_LENGTH:
+                raise ValueError(f'text too long (max {config.MAX_TEXT_INPUT_LENGTH} chars)')
+            
+            # Basic XSS protection - reject obvious script injection attempts
+            dangerous_patterns = ['<script', 'javascript:', 'vbscript:', 'onload=', 'onerror=', 'onclick=']
+            v_lower = v.lower()
+            
+            for pattern in dangerous_patterns:
+                if pattern in v_lower:
+                    raise ValueError('text contains potentially dangerous content')
+            
+            return v
     
     return RiskRequest
 
 
 # Create models using current config
-QueryRequest = _get_query_request_model()
-RiskRequest = _get_risk_request_model()
+QueryRequest: Type[BaseModel] = _get_query_request_model()
+RiskRequest: Type[BaseModel] = _get_risk_request_model()
 
 
 
 
 
 @app.post("/query")
-def query(req: QueryRequest):
+def query(req: Any) -> Dict[str, Any]:
     client: EdgarClient | None = app.state.client
     engine: FinancialQAEngine | None = app.state.engine
     if client is None or engine is None:  # pragma: no cover - startup sets these
@@ -136,28 +179,10 @@ def query(req: QueryRequest):
     return {"answer": answer, "citations": [c.__dict__ for c in cites]}
 
 
-class RiskRequest(BaseModel):
-    text: constr(min_length=1, max_length=50000)  # Set reasonable upper limit
-    
-    @validator('text')
-    def text_must_be_safe(cls, v):
-        if not v or not isinstance(v, str):
-            raise ValueError('text must be a non-empty string')
-        
-        v = v.strip()
-        
-        # Basic XSS protection - reject obvious script injection attempts
-        dangerous_patterns = ['<script', 'javascript:', 'vbscript:', 'onload=', 'onerror=', 'onclick=']
-        v_lower = v.lower()
-        
-        for pattern in dangerous_patterns:
-            if pattern in v_lower:
-                raise ValueError('text contains potentially dangerous content')
-        
-        return v
+# RiskRequest is created dynamically above to use config values
 
 
 @app.post("/risk")
-def analyze_risk(req: RiskRequest):
+def analyze_risk(req: Any) -> Dict[str, Any]:
     assessment = risk.assess(req.text)
     return {"sentiment": assessment.sentiment, "flags": assessment.flags}

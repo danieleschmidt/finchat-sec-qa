@@ -8,8 +8,8 @@ import hashlib
 import re
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List
-from flask import Flask, request, abort, jsonify, g
+from typing import Dict, List, Optional, Any, Union
+from flask import Flask, request, abort, jsonify, g, Response
 from pydantic import ValidationError
 from .server import QueryRequest, RiskRequest
 
@@ -22,7 +22,7 @@ from .config import get_config
 class RateLimiter:
     """Rate limiting with sliding window."""
     
-    def __init__(self, max_requests: int = None, window_seconds: int = None):
+    def __init__(self, max_requests: Optional[int] = None, window_seconds: Optional[int] = None) -> None:
         config = get_config()
         self.max_requests = max_requests or config.RATE_LIMIT_MAX_REQUESTS
         self.window_seconds = window_seconds or config.RATE_LIMIT_WINDOW_SECONDS
@@ -49,7 +49,7 @@ class RateLimiter:
 class BruteForceProtection:
     """Brute force protection with exponential backoff."""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.failed_attempts: Dict[str, List[float]] = defaultdict(list)
         self.success_attempts: Dict[str, float] = {}
     
@@ -105,7 +105,7 @@ brute_force_protection = BruteForceProtection()
 
 # Resource cleanup using Flask teardown handlers instead of atexit
 @app.teardown_appcontext
-def cleanup_resources(exception):
+def cleanup_resources(exception: Optional[Exception]) -> None:
     """Clean up resources when application context tears down."""
     try:
         logger.debug("Cleaning up resources")
@@ -197,7 +197,7 @@ def _auth() -> None:
 
 
 @app.after_request
-def add_security_headers(response):
+def add_security_headers(response: Response) -> Response:
     """Add security headers to all responses."""
     response.headers['X-Content-Type-Options'] = 'nosniff'
     response.headers['X-Frame-Options'] = 'DENY'
@@ -208,7 +208,7 @@ def add_security_headers(response):
 
 
 @app.route("/query", methods=["POST"])
-def query() -> object:
+def query() -> Response:
     _auth()
     data = request.json or {}
     
@@ -251,7 +251,7 @@ def query() -> object:
 
 
 @app.route("/risk", methods=["POST"])
-def risk_endpoint() -> object:
+def risk_endpoint() -> Response:
     _auth()
     data = request.json or {}
     
