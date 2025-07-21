@@ -10,14 +10,14 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Optional, Any, Union
 from flask import Flask, request, abort, jsonify, g, Response
-from pydantic import ValidationError
-from .server import QueryRequest, RiskRequest
 
 from .edgar_client import EdgarClient
 from .qa_engine import FinancialQAEngine
 from .risk_intelligence import RiskAnalyzer
 from .logging_utils import configure_logging
 from .config import get_config
+from .query_handler import QueryHandler
+from .validation import validate_text_safety, validate_ticker
 
 class RateLimiter:
     """Rate limiting with sliding window."""
@@ -98,6 +98,7 @@ engine = FinancialQAEngine(
     storage_path=Path(os.path.expanduser("~/.cache/finchat_sec_qa/index.joblib"))
 )
 risk = RiskAnalyzer()
+query_handler = QueryHandler(client, engine)
 
 # Security components
 rate_limiter = RateLimiter()  # Uses config defaults
@@ -212,36 +213,37 @@ def query() -> Response:
     _auth()
     data = request.json or {}
     
-    # Validate request data
+    # Validate request data using shared validation
     try:
-        req = QueryRequest(**data)
-    except ValidationError as e:
+        ticker = validate_ticker(data.get("ticker", ""))
+        question = validate_text_safety(data.get("question", ""), "question")
+        form_type = data.get("form_type", "10-K")
+        limit = data.get("limit", 1)
+        
+        # Additional validation for limit
+        if not isinstance(limit, int) or limit < 1:
+            abort(400, description="limit must be a positive integer")
+            
+    except ValueError as e:
         logger.warning("Invalid query request data: %s", e)
-        abort(400, description=f"Invalid request data: {e}")
+        abort(400, description=str(e))
     except Exception as e:
         logger.error("Unexpected error validating query request: %s", e)
         abort(500, description="Internal server error")
     
-    logger.info("Processing query for ticker: %s, question: %s", req.ticker, req.question)
+    logger.info("Processing query for ticker: %s, question: %s", ticker, question[:50])
     
-    # Fetch SEC filings
+    # Process query using shared handler
     try:
-        filings = client.get_recent_filings(req.ticker, limit=1)
-        if not filings:
-            logger.warning("No filings found for ticker: %s", req.ticker)
-            abort(404, description=f"No filings found for ticker {req.ticker}")
-    except Exception as e:
-        logger.error("Error fetching filings for ticker %s: %s", req.ticker, e)
-        abort(500, description="Error fetching SEC filings")
-    
-    # Download and process filing
-    try:
-        path = client.download_filing(filings[0])
-        text = Path(path).read_text()
-        engine.add_document(filings[0].accession_no, text)
-        answer, cites = engine.answer_with_citations(req.question)
-        logger.info("Query completed successfully with %d citations", len(cites))
-        return jsonify({"answer": answer, "citations": [c.__dict__ for c in cites]})
+        answer, citations = query_handler.process_query(ticker, question, form_type, limit)
+        logger.info("Query completed successfully with %d citations", len(citations))
+        return jsonify({
+            "answer": answer, 
+            "citations": query_handler.serialize_citations(citations)
+        })
+    except ValueError as e:
+        logger.warning("Query processing failed: %s", e)
+        abort(404, description=str(e))
     except FileNotFoundError as e:
         logger.error("Filing file not found: %s", e)
         abort(500, description="Error processing filing")
@@ -255,21 +257,21 @@ def risk_endpoint() -> Response:
     _auth()
     data = request.json or {}
     
-    # Validate request data
+    # Validate request data using shared validation
     try:
-        req = RiskRequest(**data)
-    except ValidationError as e:
+        text = validate_text_safety(data.get("text", ""), "text")
+    except ValueError as e:
         logger.warning("Invalid risk request data: %s", e)
-        abort(400, description=f"Invalid request data: {e}")
+        abort(400, description=str(e))
     except Exception as e:
         logger.error("Unexpected error validating risk request: %s", e)
         abort(500, description="Internal server error")
     
-    logger.info("Processing risk analysis for text of %d characters", len(req.text))
+    logger.info("Processing risk analysis for text of %d characters", len(text))
     
     # Perform risk assessment
     try:
-        assessment = risk.assess(req.text)
+        assessment = risk.assess(text)
         logger.info("Risk analysis completed with %d flags", len(assessment.flags))
         return jsonify({"sentiment": assessment.sentiment, "flags": assessment.flags})
     except Exception as e:
