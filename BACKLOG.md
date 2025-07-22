@@ -74,6 +74,15 @@
 - **Effort**: 4-6 hours
 - **Risk**: Medium
 
+### 12. ✅ Add Health Check Endpoint - COMPLETED
+- **File**: `src/finchat_sec_qa/server.py`
+- **Value**: 6 | **Criticality**: 7 | **Risk**: 6 | **Size**: 2
+- **WSJF**: 9.50
+- **Description**: Add `/health` endpoint for container orchestration, load balancer health checks, and monitoring
+- **Status**: ✅ **COMPLETED** - Implemented comprehensive health check with service status and version information
+- **Effort**: 1 hour
+- **Risk**: Low
+
 ## Medium Priority Items (WSJF 1.0-2.0)
 
 ### 6. ✅ Create Centralized Configuration Management - COMPLETED

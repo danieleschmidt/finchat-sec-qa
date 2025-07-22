@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.1] - 2025-07-22
+### Added
+- Health check endpoint at `/health` for production monitoring
+- Service status reporting in health endpoint (edgar_client, qa_engine, query_handler)
+- Version and timestamp information in health response
+- Comprehensive test coverage for health endpoint
+### Production Ready
+- Container orchestration support with health checks
+- Load balancer integration capabilities
+
 ## [1.4.0] - 2025-07-22
 ### Added
 - AsyncEdgarClient for concurrent network requests using httpx
