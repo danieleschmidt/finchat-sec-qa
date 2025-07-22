@@ -14,6 +14,8 @@ import httpx
 from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
 
+from .edgar_validation import validate_ticker, validate_cik, validate_accession_number
+
 
 @dataclass
 class FilingMetadata:
@@ -64,40 +66,15 @@ class EdgarClient:
 
     def _validate_ticker(self, ticker: str) -> str:
         """Validate and sanitize ticker symbol."""
-        if not ticker or not isinstance(ticker, str):
-            raise ValueError("Ticker must be a non-empty string")
-        
-        ticker = ticker.strip().upper()
-        
-        # Validate ticker format: 1-5 uppercase letters only
-        if not re.match(r'^[A-Z]{1,5}$', ticker):
-            raise ValueError(f"Invalid ticker format: {ticker}. Must be 1-5 uppercase letters only")
-        
-        return ticker
+        return validate_ticker(ticker)
     
     def _validate_cik(self, cik: str) -> str:
         """Validate and sanitize CIK."""
-        if not cik or not isinstance(cik, str):
-            raise ValueError("CIK must be a non-empty string")
-        
-        # Remove any non-digit characters and validate
-        cik_digits = re.sub(r'\D', '', cik)
-        if not cik_digits or not cik_digits.isdigit():
-            raise ValueError(f"Invalid CIK format: {cik}. Must contain only digits")
-        
-        return cik_digits.zfill(10)
+        return validate_cik(cik)
     
     def _validate_accession_number(self, accession: str) -> str:
         """Validate and sanitize accession number."""
-        if not accession or not isinstance(accession, str):
-            raise ValueError("Accession number must be a non-empty string")
-        
-        # Validate accession number format: 10 digits, 2 digits, 6 digits with hyphens
-        accession = accession.strip()
-        if not re.match(r'^\d{10}-\d{2}-\d{6}$', accession):
-            raise ValueError(f"Invalid accession number format: {accession}")
-        
-        return accession
+        return validate_accession_number(accession)
 
     def ticker_to_cik(self, ticker: str) -> str:
         """Return the CIK (Central Index Key) for a given ticker symbol."""
@@ -236,40 +213,15 @@ class AsyncEdgarClient:
 
     def _validate_ticker(self, ticker: str) -> str:
         """Validate and sanitize ticker symbol."""
-        if not ticker or not isinstance(ticker, str):
-            raise ValueError("Ticker must be a non-empty string")
-        
-        ticker = ticker.strip().upper()
-        
-        # Validate ticker format: 1-5 uppercase letters only
-        if not re.match(r'^[A-Z]{1,5}$', ticker):
-            raise ValueError(f"Invalid ticker format: {ticker}. Must be 1-5 uppercase letters only")
-        
-        return ticker
+        return validate_ticker(ticker)
     
     def _validate_cik(self, cik: str) -> str:
         """Validate and sanitize CIK."""
-        if not cik or not isinstance(cik, str):
-            raise ValueError("CIK must be a non-empty string")
-        
-        # Remove any non-digit characters and validate
-        cik_digits = re.sub(r'\D', '', cik)
-        if not cik_digits or not cik_digits.isdigit():
-            raise ValueError(f"Invalid CIK format: {cik}. Must contain only digits")
-        
-        return cik_digits.zfill(10)
+        return validate_cik(cik)
     
     def _validate_accession_number(self, accession: str) -> str:
         """Validate and sanitize accession number."""
-        if not accession or not isinstance(accession, str):
-            raise ValueError("Accession number must be a non-empty string")
-        
-        # Validate accession number format: 10 digits, 2 digits, 6 digits with hyphens
-        accession = accession.strip()
-        if not re.match(r'^\d{10}-\d{2}-\d{6}$', accession):
-            raise ValueError(f"Invalid accession number format: {accession}")
-        
-        return accession
+        return validate_accession_number(accession)
 
     async def ticker_to_cik(self, ticker: str) -> str:
         """Return the CIK (Central Index Key) for a given ticker symbol."""

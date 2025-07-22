@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.2] - 2025-07-22
+### Changed
+- Refactored validation method duplication in EdgarClient classes
+- Created shared edgar_validation.py module for consistent validation logic
+- Reduced code duplication by extracting common ticker, CIK, and accession number validation
+- Improved maintainability and consistency across sync and async EDGAR clients
+### Added
+- Comprehensive test coverage for validation utilities
+- New validation functions: validate_ticker, validate_cik, validate_accession_number
+
 ## [1.4.1] - 2025-07-22
 ### Added
 - Health check endpoint at `/health` for production monitoring
