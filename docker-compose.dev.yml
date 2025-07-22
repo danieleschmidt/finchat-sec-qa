@@ -1,0 +1,73 @@
+version: '3.8'
+
+# Development override for docker-compose.yml
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  api:
+    # Use development-friendly configuration
+    environment:
+      - FINCHAT_LOG_LEVEL=DEBUG
+      - FINCHAT_DEBUG=true
+      - FINCHAT_VERBOSE_LOGGING=true
+    volumes:
+      # Mount source code for hot reloading
+      - ./src:/app/src:ro
+    command: 
+      # Use uvicorn with reload for development
+      - uvicorn
+      - finchat_sec_qa.server:app
+      - --host
+      - "0.0.0.0"
+      - --port
+      - "8000"
+      - --reload
+      - --log-level
+      - debug
+    # Remove healthcheck for faster startup during development
+    healthcheck:
+      disable: true
+
+  webapp:
+    environment:
+      - FINCHAT_LOG_LEVEL=DEBUG
+      - FLASK_ENV=development
+      - FINCHAT_DEBUG=true
+      - FINCHAT_VERBOSE_LOGGING=true
+    volumes:
+      # Mount source code for hot reloading
+      - ./src:/app/src:ro
+    command:
+      # Use Flask development server instead of gunicorn
+      - python3
+      - -m
+      - flask
+      - --app
+      - finchat_sec_qa.webapp:app
+      - run
+      - --host
+      - "0.0.0.0"
+      - --port
+      - "5000"
+      - --debug
+    # Remove healthcheck for faster startup during development
+    healthcheck:
+      disable: true
+
+  # Add development tools
+  dev-tools:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    volumes:
+      - ./src:/app/src:ro
+      - ./tests:/app/tests:ro
+      - ./scripts:/app/scripts:ro
+    environment:
+      - FINCHAT_LOG_LEVEL=DEBUG
+      - PYTHONPATH=/app/src
+    networks:
+      - finchat_network
+    profiles:
+      - dev-tools
+    command: ["tail", "-f", "/dev/null"]  # Keep container running for exec commands

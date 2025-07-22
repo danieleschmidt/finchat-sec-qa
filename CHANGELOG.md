@@ -2,7 +2,83 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.4.2] - 2025-07-22
+## [1.4.6] - 2025-07-22
+### Added
+- Complete Python SDK with typed interfaces for external developer integration
+- Synchronous and asynchronous client classes (FinChatClient, AsyncFinChatClient)
+- Comprehensive data models with type safety (QueryResponse, Citation, RiskAnalysisResponse)
+- Robust error handling with specific exception types for different error conditions
+- Optional SDK dependencies via pip install finchat-sec-qa[sdk]
+- Extensive SDK documentation with usage examples (docs/SDK_USAGE_GUIDE.md)
+### SDK Features
+- Type-safe interfaces with full IDE support and autocompletion
+- Context manager support for automatic resource cleanup
+- Built-in retry logic with exponential backoff for resilient operation
+- Comprehensive error categorization (validation, not found, timeout, connection)
+- Authentication support with API key management
+- Flexible configuration with environment variable support
+### Developer Experience
+- Complete usage examples for both sync and async patterns (examples/)
+- Batch processing examples for high-performance scenarios
+- Error handling demonstrations with best practices
+- Integration examples with data analysis libraries
+- Comprehensive docstrings and type annotations for excellent IDE experience
+
+## [1.4.5] - 2025-07-22
+### Added
+- Complete Docker containerization for local development and production deployment
+- Multi-stage Dockerfiles for FastAPI server (Dockerfile.api) and Flask webapp (Dockerfile.webapp)
+- docker-compose.yml for orchestrated local development environment
+- Development-specific docker-compose.dev.yml with hot reload support
+- Production-ready container configuration with health checks and security hardening
+- Comprehensive Docker deployment documentation (docs/DOCKER_DEPLOYMENT.md)
+### Container Features
+- Non-root user execution for enhanced security
+- Multi-stage builds for optimized image sizes
+- Persistent volume management for caches and data
+- Environment-based configuration following Twelve-Factor App principles
+- Integrated health checks for container orchestration
+- Prometheus monitoring integration (optional profile)
+### Developer Experience
+- Hot reload support for development workflow
+- Separate dev-tools container for testing and debugging
+- Complete .env.example with all configuration options
+- .dockerignore optimization for faster builds
+- Entrypoint scripts with proper initialization and logging
+
+## [1.4.4] - 2025-07-22
+### Added
+- Comprehensive performance testing and benchmarking suite
+- Load testing script (scripts/load_test.py) for concurrent API testing
+- Benchmark tracking system (scripts/benchmark.py) for performance monitoring over time
+- Performance documentation with optimization guidelines and expected targets
+- Test coverage for all API endpoints with configurable load levels
+- Historical performance comparison and regression detection
+### Performance Tools
+- Async load testing with configurable concurrency and request patterns
+- Performance metrics collection (RPS, latency percentiles, error rates)
+- Baseline comparison for tracking performance improvements
+- Automated report generation with historical trends
+- Support for different testing scenarios (health checks, metrics scraping, business logic)
+### Developer Experience
+- Optional performance testing dependencies via pip install -e .[performance]
+- Comprehensive documentation in docs/PERFORMANCE_TESTING.md
+- Integration-ready for CI/CD performance regression testing
+
+## [1.4.3] - 2025-07-22
+### Added
+- Prometheus metrics endpoint at `/metrics` for production monitoring
+- HTTP request metrics (counts, duration) with method/endpoint/status labels
+- Business metrics for QA queries and risk analyses with detailed status tracking
+- Service health metrics integration with existing health endpoint
+- MetricsMiddleware for automatic HTTP request tracking
+- Comprehensive test coverage for metrics functionality
+### Production Ready
+- Prometheus scraping support for observability
+- Request/response metrics collection for performance monitoring
+- Error rate tracking for reliability insights
+
+## [1.4.2] - 2025-07-22  
 ### Changed
 - Refactored validation method duplication in EdgarClient classes
 - Created shared edgar_validation.py module for consistent validation logic

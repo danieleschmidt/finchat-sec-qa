@@ -1,0 +1,71 @@
+# FastAPI Server Dockerfile
+# Multi-stage build for optimized production image
+
+FROM python:3.11-slim as builder
+
+# Set environment variables for Python
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
+WORKDIR /build
+
+# Install system dependencies for building
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements first for better Docker layer caching
+COPY pyproject.toml /build/
+COPY src/ /build/src/
+
+# Install Python dependencies
+RUN pip install --no-cache-dir --upgrade pip
+RUN pip install --no-cache-dir -e .
+
+# Production stage
+FROM python:3.11-slim as production
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV FINCHAT_LOG_LEVEL=INFO
+ENV FINCHAT_HOST=0.0.0.0
+ENV FINCHAT_PORT=8000
+
+# Create non-root user for security
+RUN groupadd -r finchat && useradd -r -g finchat finchat
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy built dependencies from builder stage
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
+COPY --from=builder /build/src /app/src
+
+# Create cache directory for FinChat
+RUN mkdir -p /app/.cache/finchat_sec_qa && chown -R finchat:finchat /app
+
+# Copy entrypoint script
+COPY docker/entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh && chown finchat:finchat /app/entrypoint.sh
+
+# Switch to non-root user
+USER finchat
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:${FINCHAT_PORT:-8000}/health || exit 1
+
+# Expose port
+EXPOSE 8000
+
+# Use entrypoint script
+ENTRYPOINT ["/app/entrypoint.sh"]
+
+# Default command to run FastAPI server
+CMD ["uvicorn", "finchat_sec_qa.server:app", "--host", "0.0.0.0", "--port", "8000"]

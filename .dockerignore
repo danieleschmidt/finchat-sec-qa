@@ -1,0 +1,101 @@
+# Git and version control
+.git
+.gitignore
+*.orig
+*.rej
+
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Testing and coverage
+tests/
+.tox/
+.coverage
+.pytest_cache/
+.coverage.*
+pytest.ini
+tox.ini
+.nox/
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Documentation and development files
+docs/_build/
+.sphinx-build/
+README.md
+CHANGELOG.md
+CONTRIBUTING.md
+CODE_REVIEW.md
+DEVELOPMENT_PLAN.md
+BACKLOG.md
+SPRINT_BOARD.md
+*.md
+
+# Performance and benchmarking
+scripts/
+load_test_results.json
+performance_*.json
+performance_*.md
+
+# Temporary and cache files
+*.tmp
+*.temp
+.cache/
+tmp/
+temp/
+
+# Local configuration and secrets
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+*.crt
+*.p12
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Docker files (avoid recursive copying)
+Dockerfile*
+docker-compose*.yml
+.dockerignore

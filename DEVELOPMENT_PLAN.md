@@ -61,18 +61,18 @@
   - [x] Use httpx/asyncio for SEC requests
   - [x] Implement AsyncEdgarClient and AsyncQueryHandler
   - [x] Update FastAPI server to use async operations
-  - [ ] Measure throughput under load
-- [ ] [EPIC] Structured logging and metrics
-  - [ ] Emit request/response metrics
-  - [ ] Export Prometheus endpoint
+  - [x] Measure throughput under load
+- [x] [EPIC] Structured logging and metrics
+  - [x] Emit request/response metrics
+  - [x] Export Prometheus endpoint
 
 ### 💻 Increment 3: Developer UX & Expansion
-- [ ] [EPIC] Python SDK packaging
-  - [ ] Publish typed client class
-  - [ ] Example notebooks
-- [ ] [EPIC] Containerized deployment
-  - [ ] Dockerfiles for API and webapp
-  - [ ] docker-compose for local dev
+- [x] [EPIC] Python SDK packaging
+  - [x] Publish typed client class
+  - [x] Example notebooks
+- [x] [EPIC] Containerized deployment
+  - [x] Dockerfiles for API and webapp
+  - [x] docker-compose for local dev
 - [ ] [EPIC] Improved contributor docs
   - [ ] Step-by-step setup
   - [ ] Issue templates and PR guidelines
