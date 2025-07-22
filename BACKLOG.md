@@ -63,6 +63,17 @@
 - **Effort**: 5-7 hours
 - **Risk**: Medium
 
+## High Priority Items (WSJF > 2.0)
+
+### 11. ✅ Implement Async I/O for Network Operations - COMPLETED
+- **File**: `src/finchat_sec_qa/edgar_client.py`, `src/finchat_sec_qa/query_handler.py`, `src/finchat_sec_qa/server.py`
+- **Value**: 8 | **Criticality**: 7 | **Risk**: 7 | **Size**: 5
+- **WSJF**: 4.40
+- **Description**: Convert requests to httpx/asyncio for concurrent request handling and improved API performance
+- **Status**: ✅ **COMPLETED** - Implemented AsyncEdgarClient, AsyncQueryHandler, and updated FastAPI server for async operations
+- **Effort**: 4-6 hours
+- **Risk**: Medium
+
 ## Medium Priority Items (WSJF 1.0-2.0)
 
 ### 6. ✅ Create Centralized Configuration Management - COMPLETED
