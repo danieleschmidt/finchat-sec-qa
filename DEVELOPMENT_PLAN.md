@@ -55,10 +55,12 @@
   - [x] Document local setup
 
 ### ⚡️ Increment 2: Performance & Observability
-- [ ] [EPIC] Optimize vector index updates
-  - [ ] Batch add documents without refitting each time
-- [ ] [EPIC] Async network operations
-  - [ ] Use httpx/asyncio for SEC requests
+- [x] [EPIC] Optimize vector index updates
+  - [x] Batch add documents without refitting each time
+- [x] [EPIC] Async network operations
+  - [x] Use httpx/asyncio for SEC requests
+  - [x] Implement AsyncEdgarClient and AsyncQueryHandler
+  - [x] Update FastAPI server to use async operations
   - [ ] Measure throughput under load
 - [ ] [EPIC] Structured logging and metrics
   - [ ] Emit request/response metrics

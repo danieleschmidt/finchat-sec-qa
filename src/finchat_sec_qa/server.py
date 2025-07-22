@@ -8,12 +8,12 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-from .edgar_client import EdgarClient
+from .edgar_client import AsyncEdgarClient
 from .qa_engine import FinancialQAEngine
 from .risk_intelligence import RiskAnalyzer
 from .logging_utils import configure_logging
 from .config import get_config
-from .query_handler import QueryHandler
+from .query_handler import AsyncQueryHandler
 from .validation import validate_text_safety, validate_ticker
 
 
@@ -23,15 +23,18 @@ async def lifespan(app: FastAPI):
     configure_logging("INFO")
     cache = Path.home() / ".cache" / "finchat_sec_qa"
     cache.mkdir(parents=True, exist_ok=True)
-    app.state.client = EdgarClient("FinChatBot")
+    app.state.client = AsyncEdgarClient("FinChatBot")
     app.state.engine = FinancialQAEngine(storage_path=cache / "index.joblib")
-    app.state.query_handler = QueryHandler(app.state.client, app.state.engine)
+    app.state.query_handler = AsyncQueryHandler(app.state.client, app.state.engine)
     try:
         yield
     finally:
         engine = app.state.engine
         if engine is not None:
             engine.save()
+        # Close async client
+        if app.state.client is not None:
+            await app.state.client.session.aclose()
         app.state.client = None
         app.state.engine = None
         app.state.query_handler = None
@@ -59,8 +62,8 @@ class RiskRequest(BaseModel):
 
 
 @app.post("/query")
-def query(req: QueryRequest) -> Dict[str, Any]:
-    query_handler: QueryHandler | None = app.state.query_handler
+async def query(req: QueryRequest) -> Dict[str, Any]:
+    query_handler: AsyncQueryHandler | None = app.state.query_handler
     if query_handler is None:  # pragma: no cover - startup sets this
         raise HTTPException(status_code=500, detail="Server not ready")
     
@@ -76,9 +79,9 @@ def query(req: QueryRequest) -> Dict[str, Any]:
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     
-    # Process query using shared handler
+    # Process query using shared async handler
     try:
-        answer, citations = query_handler.process_query(
+        answer, citations = await query_handler.process_query(
             ticker, question, req.form_type, req.limit
         )
         return {

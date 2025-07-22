@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.0] - 2025-07-22
+### Added
+- AsyncEdgarClient for concurrent network requests using httpx
+- AsyncQueryHandler for async query processing workflows  
+- Async FastAPI endpoints for improved API performance
+- Support for concurrent SEC filing downloads and processing
+- Comprehensive test suite for async functionality
+### Changed
+- FastAPI server now uses async operations throughout
+- Added httpx dependency for async HTTP operations
+- Updated server resource management for async client cleanup
+### Performance
+- Significant performance improvements for concurrent API requests
+- Async I/O enables better resource utilization and responsiveness
+
 ## [1.3.3] - 2025-07-21
 ### Added
 - Accurate citation positioning with text chunking
