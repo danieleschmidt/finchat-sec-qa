@@ -74,6 +74,24 @@
 - **Effort**: 4-6 hours
 - **Risk**: Medium
 
+### 12. ✅ Add Health Check Endpoint - COMPLETED
+- **File**: `src/finchat_sec_qa/server.py`
+- **Value**: 6 | **Criticality**: 7 | **Risk**: 6 | **Size**: 2
+- **WSJF**: 9.50
+- **Description**: Add `/health` endpoint for container orchestration, load balancer health checks, and monitoring
+- **Status**: ✅ **COMPLETED** - Implemented comprehensive health check with service status and version information
+- **Effort**: 1 hour
+- **Risk**: Low
+
+### 13. ✅ Refactor Code Duplication in Validation Methods - COMPLETED
+- **File**: `src/finchat_sec_qa/edgar_client.py`, `src/finchat_sec_qa/edgar_validation.py`
+- **Value**: 6 | **Criticality**: 4 | **Risk**: 7 | **Size**: 3
+- **WSJF**: 5.67
+- **Description**: Extract duplicated validation methods into shared utility to improve maintainability and consistency
+- **Status**: ✅ **COMPLETED** - Created shared edgar_validation.py module and refactored both EdgarClient classes to use it
+- **Effort**: 2 hours
+- **Risk**: Low
+
 ## Medium Priority Items (WSJF 1.0-2.0)
 
 ### 6. ✅ Create Centralized Configuration Management - COMPLETED

@@ -48,6 +48,34 @@ def test_risk_invalid_payload():
         assert resp.status_code == 422
 
 
+def test_health_endpoint():
+    """Test health check endpoint returns proper status."""
+    with TestClient(app) as client:
+        resp = client.get('/health')
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data['status'] == 'healthy'
+        assert 'version' in data
+        assert 'timestamp' in data
+        assert 'services' in data
+        assert isinstance(data['services'], dict)
+
+
+def test_health_endpoint_with_services(tmp_path):
+    """Test health check includes service status when available."""
+    with TestClient(app) as client:
+        # Set up app state as if initialized
+        app.state.client = DummyClient(tmp_path / "f.html")
+        app.state.engine = FinancialQAEngine(storage_path=tmp_path / "i.joblib")
+        
+        resp = client.get('/health')
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data['status'] == 'healthy'
+        assert data['services']['edgar_client'] == 'ready'
+        assert data['services']['qa_engine'] == 'ready'
+
+
 def test_engine_saved_on_shutdown(tmp_path):
     idx = tmp_path / 'i.joblib'
 

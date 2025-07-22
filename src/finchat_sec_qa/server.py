@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 from pathlib import Path
 from typing import Type, Dict, Any, List
 
@@ -110,3 +111,50 @@ def analyze_risk(req: RiskRequest) -> Dict[str, Any]:
         return {"sentiment": assessment.sentiment, "flags": assessment.flags}
     except Exception as e:
         raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@app.get("/health")
+def health_check() -> Dict[str, Any]:
+    """Health check endpoint for container orchestration and monitoring.
+    
+    Returns:
+        Health status with service availability and version information.
+    """
+    from . import __version__
+    
+    # Check service availability
+    services = {}
+    
+    # Check Edgar client availability
+    if hasattr(app.state, 'client') and app.state.client is not None:
+        services['edgar_client'] = 'ready'
+    else:
+        services['edgar_client'] = 'unavailable'
+    
+    # Check QA engine availability  
+    if hasattr(app.state, 'engine') and app.state.engine is not None:
+        services['qa_engine'] = 'ready'
+    else:
+        services['qa_engine'] = 'unavailable'
+    
+    # Check query handler availability
+    if hasattr(app.state, 'query_handler') and app.state.query_handler is not None:
+        services['query_handler'] = 'ready'
+    else:
+        services['query_handler'] = 'unavailable'
+    
+    # Overall status - healthy if core services are ready
+    core_services_ready = (
+        services.get('edgar_client') == 'ready' and 
+        services.get('qa_engine') == 'ready' and
+        services.get('query_handler') == 'ready'
+    )
+    
+    status = 'healthy' if core_services_ready else 'degraded'
+    
+    return {
+        'status': status,
+        'version': __version__,
+        'timestamp': datetime.datetime.utcnow().isoformat(),
+        'services': services
+    }
