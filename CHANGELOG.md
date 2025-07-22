@@ -2,7 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.4.2] - 2025-07-22
+## [1.4.3] - 2025-07-22
+### Added
+- Prometheus metrics endpoint at `/metrics` for production monitoring
+- HTTP request metrics (counts, duration) with method/endpoint/status labels
+- Business metrics for QA queries and risk analyses with detailed status tracking
+- Service health metrics integration with existing health endpoint
+- MetricsMiddleware for automatic HTTP request tracking
+- Comprehensive test coverage for metrics functionality
+### Production Ready
+- Prometheus scraping support for observability
+- Request/response metrics collection for performance monitoring
+- Error rate tracking for reliability insights
+
+## [1.4.2] - 2025-07-22  
 ### Changed
 - Refactored validation method duplication in EdgarClient classes
 - Created shared edgar_validation.py module for consistent validation logic

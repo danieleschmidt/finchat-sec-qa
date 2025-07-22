@@ -16,6 +16,7 @@ from .logging_utils import configure_logging
 from .config import get_config
 from .query_handler import AsyncQueryHandler
 from .validation import validate_text_safety, validate_ticker
+from .metrics import MetricsMiddleware, record_qa_query, record_risk_analysis, update_service_health, get_metrics
 
 
 @asynccontextmanager
@@ -43,6 +44,9 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+# Add metrics middleware
+app.add_middleware(MetricsMiddleware)
+
 risk = RiskAnalyzer()
 
 
@@ -64,6 +68,9 @@ class RiskRequest(BaseModel):
 
 @app.post("/query")
 async def query(req: QueryRequest) -> Dict[str, Any]:
+    import time
+    start_time = time.time()
+    
     query_handler: AsyncQueryHandler | None = app.state.query_handler
     if query_handler is None:  # pragma: no cover - startup sets this
         raise HTTPException(status_code=500, detail="Server not ready")
@@ -78,6 +85,7 @@ async def query(req: QueryRequest) -> Dict[str, Any]:
             raise ValueError("limit must be a positive integer")
             
     except ValueError as e:
+        record_qa_query(req.ticker, req.form_type, time.time() - start_time, 'validation_error')
         raise HTTPException(status_code=400, detail=str(e))
     
     # Process query using shared async handler
@@ -85,15 +93,23 @@ async def query(req: QueryRequest) -> Dict[str, Any]:
         answer, citations = await query_handler.process_query(
             ticker, question, req.form_type, req.limit
         )
+        
+        # Record successful query metrics
+        duration = time.time() - start_time
+        record_qa_query(ticker, req.form_type, duration, 'success')
+        
         return {
             "answer": answer, 
             "citations": query_handler.serialize_citations(citations)
         }
     except ValueError as e:
+        record_qa_query(ticker, req.form_type, time.time() - start_time, 'not_found')
         raise HTTPException(status_code=404, detail=str(e))
     except FileNotFoundError as e:
+        record_qa_query(ticker, req.form_type, time.time() - start_time, 'file_error')
         raise HTTPException(status_code=500, detail="Error processing filing")
     except Exception as e:
+        record_qa_query(ticker, req.form_type, time.time() - start_time, 'internal_error')
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
@@ -103,13 +119,16 @@ def analyze_risk(req: RiskRequest) -> Dict[str, Any]:
     try:
         text = validate_text_safety(req.text, "text")
     except ValueError as e:
+        record_risk_analysis('validation_error')
         raise HTTPException(status_code=400, detail=str(e))
     
     # Perform risk assessment
     try:
         assessment = risk.assess(text)
+        record_risk_analysis('success')
         return {"sentiment": assessment.sentiment, "flags": assessment.flags}
     except Exception as e:
+        record_risk_analysis('internal_error')
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
@@ -152,9 +171,22 @@ def health_check() -> Dict[str, Any]:
     
     status = 'healthy' if core_services_ready else 'degraded'
     
+    # Update service health metrics
+    update_service_health(services)
+    
     return {
         'status': status,
         'version': __version__,
         'timestamp': datetime.datetime.utcnow().isoformat(),
         'services': services
     }
+
+
+@app.get("/metrics")
+def metrics():
+    """Prometheus metrics endpoint.
+    
+    Returns:
+        Metrics in Prometheus format for scraping.
+    """
+    return get_metrics()

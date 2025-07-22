@@ -62,9 +62,9 @@
   - [x] Implement AsyncEdgarClient and AsyncQueryHandler
   - [x] Update FastAPI server to use async operations
   - [ ] Measure throughput under load
-- [ ] [EPIC] Structured logging and metrics
-  - [ ] Emit request/response metrics
-  - [ ] Export Prometheus endpoint
+- [x] [EPIC] Structured logging and metrics
+  - [x] Emit request/response metrics
+  - [x] Export Prometheus endpoint
 
 ### 💻 Increment 3: Developer UX & Expansion
 - [ ] [EPIC] Python SDK packaging

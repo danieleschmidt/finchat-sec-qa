@@ -65,6 +65,36 @@
 
 ## High Priority Items (WSJF > 2.0)
 
+### 14. Implement Request/Response Metrics and Monitoring
+- **File**: `src/finchat_sec_qa/server.py`, `src/finchat_sec_qa/webapp.py`
+- **Value**: 8 | **Criticality**: 7 | **Risk**: 6 | **Size**: 4
+- **WSJF**: 5.25
+- **Description**: Add structured logging with request IDs, durations, and emit metrics for production observability
+- **Status**: ⏳ **PENDING**
+- **Effort**: 3-4 hours
+- **Risk**: Low
+- **Test Requirements**: Unit tests for logging format, integration tests for metrics endpoints
+
+### 15. ✅ Export Prometheus Metrics Endpoint - COMPLETED
+- **File**: `src/finchat_sec_qa/server.py`, `src/finchat_sec_qa/metrics.py`
+- **Value**: 7 | **Criticality**: 6 | **Risk**: 5 | **Size**: 3
+- **WSJF**: 6.00
+- **Description**: Add `/metrics` endpoint for Prometheus scraping with request counts, latencies, and error rates
+- **Status**: ✅ **COMPLETED** - Implemented comprehensive metrics collection and Prometheus endpoint (commit pending)
+- **Effort**: 3 hours
+- **Risk**: Low
+- **Implementation**: Added MetricsMiddleware, HTTP request metrics, business metrics, and service health tracking
+
+### 16. Measure and Optimize API Throughput
+- **File**: `src/finchat_sec_qa/server.py`, performance tests
+- **Value**: 6 | **Criticality**: 5 | **Risk**: 4 | **Size**: 3
+- **WSJF**: 5.00
+- **Description**: Add load testing and measure async API performance improvements, optimize bottlenecks
+- **Status**: ⏳ **PENDING**
+- **Effort**: 2-3 hours  
+- **Risk**: Low
+- **Dependencies**: Requires async implementation (completed)
+
 ### 11. ✅ Implement Async I/O for Network Operations - COMPLETED
 - **File**: `src/finchat_sec_qa/edgar_client.py`, `src/finchat_sec_qa/query_handler.py`, `src/finchat_sec_qa/server.py`
 - **Value**: 8 | **Criticality**: 7 | **Risk**: 7 | **Size**: 5
@@ -170,5 +200,8 @@
 - Item #3 (input validation) depends on understanding current API usage patterns
 - Item #8 (citation accuracy) may require changes to the embedding/retrieval pipeline
 
-Last Updated: 2025-07-21
+Last Updated: 2025-07-22
 Next Review: Weekly during sprint planning
+
+## Current Implementation Target
+**Item #15: Export Prometheus Metrics Endpoint (WSJF: 6.00)** - Highest priority task ready for implementation
