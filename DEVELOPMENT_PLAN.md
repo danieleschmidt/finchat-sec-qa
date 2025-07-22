@@ -67,9 +67,9 @@
   - [x] Export Prometheus endpoint
 
 ### 💻 Increment 3: Developer UX & Expansion
-- [ ] [EPIC] Python SDK packaging
-  - [ ] Publish typed client class
-  - [ ] Example notebooks
+- [x] [EPIC] Python SDK packaging
+  - [x] Publish typed client class
+  - [x] Example notebooks
 - [x] [EPIC] Containerized deployment
   - [x] Dockerfiles for API and webapp
   - [x] docker-compose for local dev

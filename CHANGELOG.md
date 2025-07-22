@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.6] - 2025-07-22
+### Added
+- Complete Python SDK with typed interfaces for external developer integration
+- Synchronous and asynchronous client classes (FinChatClient, AsyncFinChatClient)
+- Comprehensive data models with type safety (QueryResponse, Citation, RiskAnalysisResponse)
+- Robust error handling with specific exception types for different error conditions
+- Optional SDK dependencies via pip install finchat-sec-qa[sdk]
+- Extensive SDK documentation with usage examples (docs/SDK_USAGE_GUIDE.md)
+### SDK Features
+- Type-safe interfaces with full IDE support and autocompletion
+- Context manager support for automatic resource cleanup
+- Built-in retry logic with exponential backoff for resilient operation
+- Comprehensive error categorization (validation, not found, timeout, connection)
+- Authentication support with API key management
+- Flexible configuration with environment variable support
+### Developer Experience
+- Complete usage examples for both sync and async patterns (examples/)
+- Batch processing examples for high-performance scenarios
+- Error handling demonstrations with best practices
+- Integration examples with data analysis libraries
+- Comprehensive docstrings and type annotations for excellent IDE experience
+
 ## [1.4.5] - 2025-07-22
 ### Added
 - Complete Docker containerization for local development and production deployment
