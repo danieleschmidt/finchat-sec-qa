@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.7] - 2025-07-22
+### Added
+- Comprehensive contributor documentation for improved developer onboarding
+- Detailed development setup guide with prerequisites, environment configuration, and troubleshooting (docs/DEVELOPMENT_SETUP.md)
+- GitHub issue templates for structured bug reports and feature requests
+- Pull request template with security, testing, and quality checklists
+- Enhanced CONTRIBUTING.md with workflow guidelines, code standards, and component-specific guidance
+- Comprehensive test suite for documentation completeness and quality validation
+### Developer Experience
+- Step-by-step setup instructions for local development and Docker environments
+- Clear guidelines for testing procedures, code quality standards, and performance requirements
+- Structured templates for consistent issue reporting and pull request submissions
+- Cross-referenced documentation for improved navigation and discoverability
+- Security-focused guidelines for safe development practices
+
 ## [1.4.6] - 2025-07-22
 ### Added
 - Complete Python SDK with typed interfaces for external developer integration
