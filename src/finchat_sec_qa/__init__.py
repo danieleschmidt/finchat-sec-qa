@@ -1,6 +1,6 @@
 """FinChat-SEC-QA package."""
 
-__version__ = "1.4.4"
+__version__ = "1.4.5"
 
 from .edgar_client import EdgarClient, AsyncEdgarClient, FilingMetadata
 from .qa_engine import DocumentChunk, FinancialQAEngine

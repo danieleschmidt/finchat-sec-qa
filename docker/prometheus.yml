@@ -1,0 +1,44 @@
+# Prometheus configuration for FinChat SEC QA monitoring
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  # Add alert rules here if needed
+  # - "alert_rules.yml"
+
+scrape_configs:
+  # Scrape Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Scrape FinChat API server metrics
+  - job_name: 'finchat-api'
+    static_configs:
+      - targets: ['api:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    # Add labels for identification
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'finchat-api'
+    # Only scrape if /metrics endpoint is available
+    honor_labels: true
+
+  # Scrape FinChat WebApp metrics (if metrics are exposed)
+  - job_name: 'finchat-webapp'
+    static_configs:
+      - targets: ['webapp:5000']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    # Add labels for identification
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'finchat-webapp'
+    honor_labels: true

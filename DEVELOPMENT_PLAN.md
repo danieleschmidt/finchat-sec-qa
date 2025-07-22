@@ -70,9 +70,9 @@
 - [ ] [EPIC] Python SDK packaging
   - [ ] Publish typed client class
   - [ ] Example notebooks
-- [ ] [EPIC] Containerized deployment
-  - [ ] Dockerfiles for API and webapp
-  - [ ] docker-compose for local dev
+- [x] [EPIC] Containerized deployment
+  - [x] Dockerfiles for API and webapp
+  - [x] docker-compose for local dev
 - [ ] [EPIC] Improved contributor docs
   - [ ] Step-by-step setup
   - [ ] Issue templates and PR guidelines

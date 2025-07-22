@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.5] - 2025-07-22
+### Added
+- Complete Docker containerization for local development and production deployment
+- Multi-stage Dockerfiles for FastAPI server (Dockerfile.api) and Flask webapp (Dockerfile.webapp)
+- docker-compose.yml for orchestrated local development environment
+- Development-specific docker-compose.dev.yml with hot reload support
+- Production-ready container configuration with health checks and security hardening
+- Comprehensive Docker deployment documentation (docs/DOCKER_DEPLOYMENT.md)
+### Container Features
+- Non-root user execution for enhanced security
+- Multi-stage builds for optimized image sizes
+- Persistent volume management for caches and data
+- Environment-based configuration following Twelve-Factor App principles
+- Integrated health checks for container orchestration
+- Prometheus monitoring integration (optional profile)
+### Developer Experience
+- Hot reload support for development workflow
+- Separate dev-tools container for testing and debugging
+- Complete .env.example with all configuration options
+- .dockerignore optimization for faster builds
+- Entrypoint scripts with proper initialization and logging
+
 ## [1.4.4] - 2025-07-22
 ### Added
 - Comprehensive performance testing and benchmarking suite
