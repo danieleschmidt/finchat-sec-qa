@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "finchat_sec_qa"
-version = "1.4.3"
+version = "1.4.4"
 requires-python = ">=3.8"
 dependencies = [
     "requests",
@@ -22,6 +22,7 @@ dependencies = [
 [project.optional-dependencies]
 voice = ["pyttsx3"]
 dev = ["pre-commit"]
+performance = ["aiohttp", "pytest", "pytest-asyncio"]
 
 [tool.setuptools]
 package-dir = {"" = "src"}

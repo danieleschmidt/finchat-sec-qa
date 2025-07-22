@@ -61,7 +61,7 @@
   - [x] Use httpx/asyncio for SEC requests
   - [x] Implement AsyncEdgarClient and AsyncQueryHandler
   - [x] Update FastAPI server to use async operations
-  - [ ] Measure throughput under load
+  - [x] Measure throughput under load
 - [x] [EPIC] Structured logging and metrics
   - [x] Emit request/response metrics
   - [x] Export Prometheus endpoint

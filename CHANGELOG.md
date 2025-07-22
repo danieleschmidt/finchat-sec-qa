@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.4] - 2025-07-22
+### Added
+- Comprehensive performance testing and benchmarking suite
+- Load testing script (scripts/load_test.py) for concurrent API testing
+- Benchmark tracking system (scripts/benchmark.py) for performance monitoring over time
+- Performance documentation with optimization guidelines and expected targets
+- Test coverage for all API endpoints with configurable load levels
+- Historical performance comparison and regression detection
+### Performance Tools
+- Async load testing with configurable concurrency and request patterns
+- Performance metrics collection (RPS, latency percentiles, error rates)
+- Baseline comparison for tracking performance improvements
+- Automated report generation with historical trends
+- Support for different testing scenarios (health checks, metrics scraping, business logic)
+### Developer Experience
+- Optional performance testing dependencies via pip install -e .[performance]
+- Comprehensive documentation in docs/PERFORMANCE_TESTING.md
+- Integration-ready for CI/CD performance regression testing
+
 ## [1.4.3] - 2025-07-22
 ### Added
 - Prometheus metrics endpoint at `/metrics` for production monitoring
