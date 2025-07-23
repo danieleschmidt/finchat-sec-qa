@@ -7,6 +7,7 @@ from typing import Type, Dict, Any, List
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from .edgar_client import AsyncEdgarClient
@@ -43,6 +44,17 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+
+# Add CORS middleware
+config = get_config()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=config.CORS_ALLOWED_ORIGINS,
+    allow_credentials=config.CORS_ALLOW_CREDENTIALS,
+    allow_methods=['GET', 'POST', 'OPTIONS'],
+    allow_headers=['Content-Type', 'Authorization'],
+    max_age=config.CORS_MAX_AGE,
+)
 
 # Add metrics middleware
 app.add_middleware(MetricsMiddleware)

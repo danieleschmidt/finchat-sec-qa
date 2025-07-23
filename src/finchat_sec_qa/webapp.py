@@ -205,6 +205,33 @@ def add_security_headers(response: Response) -> Response:
     response.headers['X-XSS-Protection'] = config.XSS_PROTECTION_MODE
     response.headers['Strict-Transport-Security'] = f'max-age={config.HSTS_MAX_AGE}; includeSubDomains'
     response.headers['Content-Security-Policy'] = "default-src 'self'"
+    
+    # Add CORS headers
+    _add_cors_headers(response)
+    
+    return response
+
+
+def _add_cors_headers(response: Response) -> None:
+    """Add CORS headers to response if origin is allowed."""
+    origin = request.headers.get('Origin')
+    
+    if origin and origin in config.CORS_ALLOWED_ORIGINS:
+        response.headers['Access-Control-Allow-Origin'] = origin
+        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+        response.headers['Access-Control-Max-Age'] = str(config.CORS_MAX_AGE)
+        
+        if config.CORS_ALLOW_CREDENTIALS:
+            response.headers['Access-Control-Allow-Credentials'] = 'true'
+
+
+@app.route('/<path:path>', methods=['OPTIONS'])
+@app.route('/', methods=['OPTIONS'])
+def handle_options(path: str = '') -> Response:
+    """Handle CORS preflight requests."""
+    response = jsonify({'status': 'ok'})
+    _add_cors_headers(response)
     return response
 
 
