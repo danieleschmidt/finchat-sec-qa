@@ -248,6 +248,64 @@
 - **Security Impact**: MEDIUM - DoS prevention and CSRF attack mitigation
 - **Implementation**: Added Flask/FastAPI request size limits, CSRF token generation/validation, security headers middleware, comprehensive test coverage, detailed documentation
 
+## Newly Discovered High-Priority Items (2025-07-23)
+
+### 28. ✅ Add Bounded Memory Caches to Prevent Memory Leaks - COMPLETED
+- **File**: `src/finchat_sec_qa/webapp.py`, `src/finchat_sec_qa/rate_limiting.py`, `src/finchat_sec_qa/utils.py`
+- **Value**: 8 | **Criticality**: 9 | **Risk**: 9 | **Size**: 3
+- **WSJF**: 8.67
+- **Description**: Unbounded dictionaries in CSRF tokens, rate limiter fallback storage accumulate data indefinitely causing memory leaks in production
+- **Status**: ✅ **COMPLETED** - Implemented BoundedCache and TimeBoundedCache with LRU eviction and configurable size limits
+- **Effort**: 2-3 hours
+- **Risk**: Low
+- **Performance Impact**: CRITICAL - Prevents OOM crashes in production
+- **Implementation**: Added LRU cache utility classes, updated CSRF protection to use TimeBoundedCache, converted rate limiting fallback to BoundedCache, added configurable cache size limits, comprehensive test coverage
+
+### 29. Implement Redis Connection Pooling  
+- **File**: `src/finchat_sec_qa/rate_limiting.py:99-105`
+- **Value**: 6 | **Criticality**: 5 | **Risk**: 6 | **Size**: 2
+- **WSJF**: 8.50
+- **Description**: Creates new Redis connections without pooling, reducing latency for rate limit checks
+- **Effort**: 1-2 hours
+- **Risk**: Low
+- **Performance Impact**: MEDIUM - Better resource utilization under load
+
+### 30. Implement Ticker Caching to Eliminate N+1 Query Pattern
+- **File**: `src/finchat_sec_qa/edgar_client.py:79-89`
+- **Value**: 9 | **Criticality**: 8 | **Risk**: 8 | **Size**: 3
+- **WSJF**: 8.33
+- **Description**: Downloads entire company tickers JSON (~5MB) on every ticker lookup with O(n) linear search causing significant API latency
+- **Effort**: 2-3 hours
+- **Risk**: Low
+- **Performance Impact**: HIGH - 80% API response time reduction
+
+### 31. Fix Bare Exception Handlers
+- **File**: `src/finchat_sec_qa/rate_limiting.py:173`, `src/finchat_sec_qa/config.py:172`
+- **Value**: 5 | **Criticality**: 4 | **Risk**: 6 | **Size**: 2
+- **WSJF**: 7.50
+- **Description**: Bare except Exception handlers swallow errors silently making debugging difficult
+- **Effort**: 1-2 hours
+- **Risk**: Low
+- **Reliability Impact**: MEDIUM - Better error visibility
+
+### 32. Parallelize Multi-Company Analysis with Async Processing
+- **File**: `src/finchat_sec_qa/multi_company.py:141-144`
+- **Value**: 8 | **Criticality**: 7 | **Risk**: 8 | **Size**: 4
+- **WSJF**: 5.75
+- **Description**: Sequential processing of companies when could be parallel, causing N-fold slowdown for bulk operations
+- **Effort**: 3-4 hours
+- **Risk**: Medium
+- **Performance Impact**: HIGH - N-fold speedup for multi-company queries
+
+### 33. Add Comprehensive Unit Tests for Risk Intelligence Module
+- **File**: `src/finchat_sec_qa/risk_intelligence.py`
+- **Value**: 7 | **Criticality**: 6 | **Risk**: 8 | **Size**: 4
+- **WSJF**: 5.25
+- **Description**: Critical risk analysis module has zero test coverage, risking financial analysis errors
+- **Effort**: 3-4 hours
+- **Risk**: Low
+- **Quality Impact**: HIGH - Ensures reliability of risk assessment features
+
 Last Updated: 2025-07-23
 Next Review: Weekly during sprint planning
 

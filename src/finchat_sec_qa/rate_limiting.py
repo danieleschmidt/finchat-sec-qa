@@ -7,6 +7,7 @@ import logging
 from typing import Dict, List, Optional, Union, Any
 from collections import defaultdict
 from .config import get_config
+from .utils import BoundedCache
 
 try:
     import redis
@@ -52,36 +53,46 @@ class DistributedRateLimiter:
     """
     
     def __init__(self, max_requests: Optional[int] = None, window_seconds: Optional[int] = None, redis_url: Optional[str] = None):
-        """Initialize distributed rate limiter."""
+        """Initialize distributed rate limiter with bounded fallback cache."""
         config = get_config()
         self.max_requests = max_requests or config.RATE_LIMIT_MAX_REQUESTS
         self.window_seconds = window_seconds or config.RATE_LIMIT_WINDOW_SECONDS
         self.redis_url = redis_url or getattr(config, 'REDIS_URL', 'redis://localhost:6379/0')
+        self.max_fallback_cache_size = config.RATE_LIMIT_MAX_FALLBACK_CACHE_SIZE
+        self.pool_max_connections = config.REDIS_POOL_MAX_CONNECTIONS
         
-        # Initialize Redis client with fallback
+        # Initialize Redis client with connection pool and bounded fallback
         self.redis_client: Optional[RedisClient] = None
-        self.fallback_storage: Dict[str, List[float]] = defaultdict(list)
+        self.redis_pool: Optional[Any] = None
+        self.fallback_storage = BoundedCache[str, List[float]](max_size=self.max_fallback_cache_size)
         
         self._init_redis()
     
     def _init_redis(self) -> None:
-        """Initialize Redis connection with error handling."""
+        """Initialize Redis connection pool with error handling."""
         try:
             import redis
-            client = redis.Redis.from_url(
+            
+            # Create connection pool for better performance
+            self.redis_pool = redis.ConnectionPool.from_url(
                 self.redis_url,
+                max_connections=self.pool_max_connections,
                 decode_responses=True,
                 socket_connect_timeout=1,
-                socket_timeout=1,
-                retry_on_timeout=True
+                socket_timeout=1
             )
+            
+            # Create Redis client using the connection pool
+            client = redis.Redis(connection_pool=self.redis_pool)
+            
             # Test connection
             client.ping()
             self.redis_client = client
-            logger.info("Connected to Redis for distributed rate limiting")
+            logger.info("Connected to Redis with connection pool for distributed rate limiting (pool_size=%d)", self.pool_max_connections)
         except Exception as e:
             logger.warning(f"Failed to connect to Redis, falling back to in-memory: {e}")
             self.redis_client = None
+            self.redis_pool = None
     
     def is_allowed(self, client_id: str) -> bool:
         """
@@ -128,21 +139,27 @@ class DistributedRateLimiter:
             return self._memory_is_allowed(client_id)
     
     def _memory_is_allowed(self, client_id: str) -> bool:
-        """In-memory fallback rate limiting (original implementation)."""
+        """In-memory fallback rate limiting with bounded cache."""
         now = time.time()
         
+        # Get current requests for client (or empty list)
+        client_requests = self.fallback_storage.get(client_id, [])
+        
         # Clean old requests outside the window
-        self.fallback_storage[client_id] = [
-            req_time for req_time in self.fallback_storage[client_id]
+        client_requests = [
+            req_time for req_time in client_requests
             if now - req_time < self.window_seconds
         ]
         
         # Check if under limit
-        if len(self.fallback_storage[client_id]) < self.max_requests:
-            self.fallback_storage[client_id].append(now)
+        if len(client_requests) < self.max_requests:
+            client_requests.append(now)
+            self.fallback_storage.set(client_id, client_requests)
             return True
-        
-        return False
+        else:
+            # Update cache with cleaned requests even if over limit
+            self.fallback_storage.set(client_id, client_requests)
+            return False
     
     def reset_client(self, client_id: str) -> None:
         """Reset rate limit for a specific client (for testing/admin)."""
@@ -154,8 +171,7 @@ class DistributedRateLimiter:
                 logger.warning(f"Failed to reset Redis rate limit for {client_id}: {e}")
         
         # Also reset in-memory storage
-        if client_id in self.fallback_storage:
-            del self.fallback_storage[client_id]
+        self.fallback_storage.delete(client_id)
     
     def get_remaining_requests(self, client_id: str) -> int:
         """Get number of remaining requests for client."""
@@ -175,11 +191,28 @@ class DistributedRateLimiter:
         
         # Fallback to memory count
         now = time.time()
+        client_requests = self.fallback_storage.get(client_id, [])
         current_requests = [
-            req_time for req_time in self.fallback_storage[client_id]
+            req_time for req_time in client_requests
             if now - req_time < self.window_seconds
         ]
         return max(0, self.max_requests - len(current_requests))
+    
+    def get_redis_pool_stats(self) -> Dict[str, Any]:
+        """Get Redis connection pool statistics for monitoring."""
+        if not self.redis_pool:
+            return {"error": "Redis pool not initialized"}
+        
+        try:
+            return {
+                "created_connections": getattr(self.redis_pool, "created_connections", 0),
+                "available_connections": len(getattr(self.redis_pool, "_available_connections", [])),
+                "in_use_connections": len(getattr(self.redis_pool, "_in_use_connections", [])),
+                "max_connections": self.redis_pool.max_connections,
+                "pool_enabled": True
+            }
+        except Exception as e:
+            return {"error": f"Failed to get pool stats: {e}"}
 
 
 # Backward compatibility: Update existing webapp to use distributed limiter
