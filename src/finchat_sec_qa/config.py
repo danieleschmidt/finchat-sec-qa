@@ -100,6 +100,14 @@ class Config:
             'FINCHAT_CORS_MAX_AGE', 86400  # 24 hours
         )
         
+        # Security configuration
+        self.MAX_REQUEST_SIZE_MB = self._get_int_env(
+            'FINCHAT_MAX_REQUEST_SIZE_MB', 1  # 1MB default
+        )
+        self.CSRF_TOKEN_EXPIRY_SECONDS = self._get_int_env(
+            'FINCHAT_CSRF_TOKEN_EXPIRY_SECONDS', 1800  # 30 minutes
+        )
+        
         # Validate configuration
         self._validate()
     

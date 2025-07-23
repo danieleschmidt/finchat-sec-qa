@@ -17,6 +17,7 @@ dependencies = [
     "uvicorn",
     "flask",
     "prometheus_client",
+    "cryptography",
 ]
 
 [project.optional-dependencies]
