@@ -1,3 +1,4 @@
+import pytest
 from finchat_sec_qa.multi_company import compare_question_across_filings
 from unittest.mock import patch, MagicMock
 
@@ -10,19 +11,16 @@ def test_success():
 
 
 def test_edge_case_invalid_input():
+    """Test that ValueError is raised for invalid input parameters."""
     docs = {"a": "alpha"}
-    try:
+    
+    # Test empty question raises ValueError
+    with pytest.raises(ValueError):
         compare_question_across_filings("", docs)
-    except ValueError:
-        pass
-    else:
-        assert False
-    try:
+    
+    # Test empty documents raises ValueError
+    with pytest.raises(ValueError):
         compare_question_across_filings("beta", {})
-    except ValueError:
-        pass
-    else:
-        assert False
 
 
 def test_performance_single_engine_instance():

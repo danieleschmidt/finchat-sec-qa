@@ -4,7 +4,10 @@ This module provides a centralized way to manage all configuration values,
 supporting environment variable overrides and validation.
 """
 import os
-from typing import Optional, List
+from typing import Optional, List, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .secrets_manager import SecretsManager
 
 
 class Config:
@@ -77,8 +80,13 @@ class Config:
             'FINCHAT_EXPONENTIAL_BACKOFF_UNIT_SECONDS', 60
         )
         
-        # Authentication token
-        self.SECRET_TOKEN = os.getenv('FINCHAT_TOKEN')
+        # Authentication token (with secrets manager support)
+        self.secrets_manager: Optional['SecretsManager'] = None
+        self._init_secrets_manager()
+        self.SECRET_TOKEN = self._get_secure_token()
+        
+        # Redis configuration for distributed rate limiting
+        self.REDIS_URL = os.getenv('FINCHAT_REDIS_URL', 'redis://localhost:6379/0')
         
         # CORS configuration
         self.CORS_ALLOWED_ORIGINS = self._get_list_env(
@@ -119,6 +127,43 @@ class Config:
             return default
         # Split by comma and strip whitespace
         return [item.strip() for item in value.split(',') if item.strip()]
+    
+    def _init_secrets_manager(self) -> None:
+        """Initialize secrets manager based on environment configuration."""
+        from .secrets_manager import SecretsManager
+        
+        # Determine provider from environment
+        provider = os.getenv('FINCHAT_SECRETS_PROVIDER', 'env')
+        
+        # Provider-specific configuration
+        provider_config = {}
+        if provider == 'aws':
+            provider_config['region'] = os.getenv('FINCHAT_AWS_REGION', 'us-east-1')
+        elif provider == 'vault':
+            provider_config['vault_url'] = os.getenv('FINCHAT_VAULT_URL', 'http://localhost:8200')
+            provider_config['vault_token'] = os.getenv('FINCHAT_VAULT_TOKEN')
+        
+        # Encryption key for local storage
+        encryption_key = os.getenv('FINCHAT_ENCRYPTION_KEY')
+        
+        # Fallback chain
+        fallback_providers = os.getenv('FINCHAT_SECRETS_FALLBACKS', 'env').split(',')
+        
+        self.secrets_manager = SecretsManager(
+            provider=provider,
+            encryption_key=encryption_key,
+            fallback_providers=fallback_providers,
+            cache_ttl=int(os.getenv('FINCHAT_SECRETS_CACHE_TTL', '300')),
+            **provider_config
+        )
+    
+    def _get_secure_token(self) -> Optional[str]:
+        """Get authentication token using secrets manager."""
+        try:
+            return self.secrets_manager.get_secret('FINCHAT_TOKEN')
+        except Exception:
+            # Fallback to direct environment variable for backward compatibility
+            return os.getenv('FINCHAT_TOKEN')
     
     def _validate(self) -> None:
         """Validate configuration values."""

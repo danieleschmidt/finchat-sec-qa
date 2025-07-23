@@ -1,4 +1,5 @@
 import logging
+from unittest.mock import Mock
 from finchat_sec_qa.webapp import app
 
 
@@ -15,16 +16,22 @@ def test_query(monkeypatch, tmp_path):
     engine = webapp.engine
     monkeypatch.delenv("FINCHAT_TOKEN", raising=False)
 
-    class DummyClient:
-        def get_recent_filings(self, ticker, limit=1):
-            return [type('F', (), {'accession_no': '1', 'document_url': str(tmp_path / 'f.html')})]
-
-        def download_filing(self, filing):
-            path = tmp_path / 'f.html'
-            path.write_text('alpha')
-            return path
-
-    monkeypatch.setattr(webapp, 'client', DummyClient())
+    # Create mock client with proper Mock objects
+    mock_client = Mock()
+    mock_filing = Mock()
+    mock_filing.accession_no = '1'
+    mock_filing.document_url = str(tmp_path / 'f.html')
+    
+    mock_client.get_recent_filings.return_value = [mock_filing]
+    
+    def download_side_effect(filing):
+        path = tmp_path / 'f.html'
+        path.write_text('alpha')
+        return path
+    
+    mock_client.download_filing.side_effect = download_side_effect
+    
+    monkeypatch.setattr(webapp, 'client', mock_client)
     engine.chunks.clear()
     with app.test_client() as client_app:
         resp = client_app.post('/query', json={'question': 'a?', 'ticker': 'AAPL'})
@@ -68,11 +75,11 @@ def test_query_filing_not_found_handling(monkeypatch, caplog):
     from finchat_sec_qa import webapp
     monkeypatch.delenv("FINCHAT_TOKEN", raising=False)
     
-    class DummyClientNoFilings:
-        def get_recent_filings(self, ticker, limit=1):
-            return []  # No filings found
+    # Create mock client that returns no filings
+    mock_client = Mock()
+    mock_client.get_recent_filings.return_value = []  # No filings found
     
-    monkeypatch.setattr(webapp, 'client', DummyClientNoFilings())
+    monkeypatch.setattr(webapp, 'client', mock_client)
     
     with caplog.at_level(logging.WARNING):
         with app.test_client() as client:
@@ -89,15 +96,16 @@ def test_query_file_error_handling(monkeypatch, caplog, tmp_path):
     from finchat_sec_qa import webapp
     monkeypatch.delenv("FINCHAT_TOKEN", raising=False)
     
-    class DummyClientFileError:
-        def get_recent_filings(self, ticker, limit=1):
-            return [type('F', (), {'accession_no': '1', 'document_url': 'http://example.com'})]
-        
-        def download_filing(self, filing):
-            # Return path to non-existent file
-            return tmp_path / 'nonexistent.html'
+    # Create mock client that simulates file error
+    mock_client = Mock()
+    mock_filing = Mock()
+    mock_filing.accession_no = '1'
+    mock_filing.document_url = 'http://example.com'
     
-    monkeypatch.setattr(webapp, 'client', DummyClientFileError())
+    mock_client.get_recent_filings.return_value = [mock_filing]
+    mock_client.download_filing.return_value = tmp_path / 'nonexistent.html'  # Return path to non-existent file
+    
+    monkeypatch.setattr(webapp, 'client', mock_client)
     
     with caplog.at_level(logging.ERROR):
         with app.test_client() as client:
@@ -153,16 +161,22 @@ def test_successful_operations_logging(monkeypatch, caplog, tmp_path):
     engine = webapp.engine
     monkeypatch.delenv("FINCHAT_TOKEN", raising=False)
     
-    class DummyClient:
-        def get_recent_filings(self, ticker, limit=1):
-            return [type('F', (), {'accession_no': '1', 'document_url': str(tmp_path / 'f.html')})]
-        
-        def download_filing(self, filing):
-            path = tmp_path / 'f.html'
-            path.write_text('revenue increased by 15%')
-            return path
+    # Create mock client for successful operations test
+    mock_client = Mock()
+    mock_filing = Mock()
+    mock_filing.accession_no = '1'
+    mock_filing.document_url = str(tmp_path / 'f.html')
     
-    monkeypatch.setattr(webapp, 'client', DummyClient())
+    mock_client.get_recent_filings.return_value = [mock_filing]
+    
+    def download_side_effect(filing):
+        path = tmp_path / 'f.html'
+        path.write_text('revenue increased by 15%')
+        return path
+    
+    mock_client.download_filing.side_effect = download_side_effect
+    
+    monkeypatch.setattr(webapp, 'client', mock_client)
     engine.chunks.clear()
     
     with caplog.at_level(logging.INFO):

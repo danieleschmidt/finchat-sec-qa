@@ -1,20 +1,17 @@
 from datetime import date
 from pathlib import Path
-
+from unittest.mock import Mock
 
 from finchat_sec_qa.edgar_client import EdgarClient, FilingMetadata
 
 
-class DummyResponse:
-    def __init__(self, json_data=None, content=b"") -> None:
-        self._json_data = json_data
-        self.content = content
-
-    def json(self):
-        return self._json_data
-
-    def raise_for_status(self) -> None:
-        pass
+def create_mock_response(json_data=None, content=b""):
+    """Create a mock HTTP response object."""
+    mock_response = Mock()
+    mock_response.json.return_value = json_data
+    mock_response.content = content
+    mock_response.raise_for_status.return_value = None
+    return mock_response
 
 
 def test_get_recent_filings(monkeypatch):
@@ -30,7 +27,10 @@ def test_get_recent_filings(monkeypatch):
         }
     }
 
-    responses = [DummyResponse(mapping_json), DummyResponse(recent_json)]
+    responses = [
+        create_mock_response(mapping_json), 
+        create_mock_response(recent_json)
+    ]
 
     def fake_get(self, url):
         return responses.pop(0)
@@ -51,7 +51,7 @@ def test_download_filing(monkeypatch, tmp_path: Path):
     content = b"<html></html>"
 
     def fake_get(self, url):
-        return DummyResponse(content=content)
+        return create_mock_response(content=content)
 
     monkeypatch.setattr(EdgarClient, "_get", fake_get)
     client = EdgarClient("ua")
@@ -73,7 +73,7 @@ def test_download_filing_cache(monkeypatch, tmp_path: Path):
 
     def fake_get(self, url):
         calls.append(url)
-        return DummyResponse(content=b"c")
+        return create_mock_response(content=b"c")
 
     monkeypatch.setattr(EdgarClient, "_get", fake_get)
     client = EdgarClient("ua", cache_dir=tmp_path)
