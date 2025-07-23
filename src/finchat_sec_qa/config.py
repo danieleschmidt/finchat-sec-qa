@@ -87,6 +87,9 @@ class Config:
         
         # Redis configuration for distributed rate limiting
         self.REDIS_URL = os.getenv('FINCHAT_REDIS_URL', 'redis://localhost:6379/0')
+        self.REDIS_POOL_MAX_CONNECTIONS = self._get_int_env(
+            'FINCHAT_REDIS_POOL_MAX_CONNECTIONS', 20  # Connection pool size
+        )
         
         # CORS configuration
         self.CORS_ALLOWED_ORIGINS = self._get_list_env(
@@ -106,6 +109,14 @@ class Config:
         )
         self.CSRF_TOKEN_EXPIRY_SECONDS = self._get_int_env(
             'FINCHAT_CSRF_TOKEN_EXPIRY_SECONDS', 1800  # 30 minutes
+        )
+        
+        # Cache size limits to prevent memory leaks
+        self.CSRF_MAX_CACHE_SIZE = self._get_int_env(
+            'FINCHAT_CSRF_MAX_CACHE_SIZE', 1000  # Max CSRF tokens in memory
+        )
+        self.RATE_LIMIT_MAX_FALLBACK_CACHE_SIZE = self._get_int_env(
+            'FINCHAT_RATE_LIMIT_MAX_FALLBACK_CACHE_SIZE', 10000  # Max fallback clients
         )
         
         # Validate configuration

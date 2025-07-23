@@ -21,51 +21,47 @@ from .config import get_config
 from .query_handler import QueryHandler
 from .validation import validate_text_safety, validate_ticker
 from .rate_limiting import DistributedRateLimiter
+from .utils import TimeBoundedCache
 
 # Backward compatibility - RateLimiter is now an alias for DistributedRateLimiter
 RateLimiter = DistributedRateLimiter
 
 
 class CSRFProtection:
-    """CSRF token management and validation."""
+    """CSRF token management and validation with bounded memory usage."""
     
     def __init__(self) -> None:
-        self.tokens: Dict[str, float] = {}  # token -> expiry_time
+        config = get_config()
+        self.max_cache_size = config.CSRF_MAX_CACHE_SIZE
+        self.tokens = TimeBoundedCache[str, float](
+            max_size=self.max_cache_size,
+            ttl_seconds=config.CSRF_TOKEN_EXPIRY_SECONDS
+        )
         self.secret_key = os.urandom(32)  # Session-specific secret
     
     def generate_token(self) -> str:
-        """Generate a new CSRF token."""
+        """Generate a new CSRF token with automatic expiration."""
         token = secrets.token_urlsafe(32)
-        config = get_config()
-        expiry_time = time.time() + config.CSRF_TOKEN_EXPIRY_SECONDS
-        self.tokens[token] = expiry_time
+        expiry_time = time.time() + self.tokens.ttl_seconds
+        self.tokens.set(token, expiry_time)
         
-        # Clean up expired tokens
-        self._cleanup_expired_tokens()
+        # Cleanup expired tokens periodically
+        self.tokens.cleanup_expired()
         
         return token
     
     def validate_token(self, token: str) -> bool:
-        """Validate a CSRF token."""
-        if not token or token not in self.tokens:
+        """Validate a CSRF token (automatically handles expiration)."""
+        if not token:
             return False
         
-        # Check if token is expired
-        if time.time() > self.tokens[token]:
-            del self.tokens[token]
-            return False
-        
-        return True
+        # TimeBoundedCache automatically handles expiration
+        expiry_time = self.tokens.get(token)
+        return expiry_time is not None
     
     def _cleanup_expired_tokens(self) -> None:
-        """Remove expired tokens from memory."""
-        current_time = time.time()
-        expired_tokens = [
-            token for token, expiry in self.tokens.items()
-            if current_time > expiry
-        ]
-        for token in expired_tokens:
-            del self.tokens[token]
+        """Remove expired tokens from memory (handled automatically by TimeBoundedCache)."""
+        self.tokens.cleanup_expired()
 
 
 class BruteForceProtection:
