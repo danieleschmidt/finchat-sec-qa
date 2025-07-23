@@ -329,31 +329,117 @@ class SecretsManager:
             return False
     
     def _encrypt_value(self, value: str) -> str:
-        """Encrypt secret value using configured key."""
+        """Encrypt secret value using AES-GCM authenticated encryption."""
         if not self.encryption_key:
             raise ValueError("No encryption key configured")
         
-        # Simple encryption for demonstration (use proper encryption in production)
-        key_hash = hashlib.sha256(self.encryption_key).digest()
-        
-        # XOR encryption (replace with AES in production)
-        value_bytes = value.encode('utf-8')
-        encrypted_bytes = bytes(a ^ b for a, b in zip(value_bytes, key_hash * (len(value_bytes) // len(key_hash) + 1)))
-        
-        return base64.b64encode(encrypted_bytes).decode('ascii')
+        try:
+            from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+            from cryptography.hazmat.primitives import hashes
+            from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+            import os
+            
+            # Generate random 12-byte IV for AES-GCM
+            iv = os.urandom(12)
+            
+            # Derive AES key from provided key using PBKDF2
+            # Use a fixed salt for backward compatibility (in production, use per-secret salt)
+            salt = b'finchat_secrets_salt_v1'
+            kdf = PBKDF2HMAC(
+                algorithm=hashes.SHA256(),
+                length=32,  # AES-256
+                salt=salt,
+                iterations=100000,  # Recommended minimum
+            )
+            derived_key = kdf.derive(self.encryption_key)
+            
+            # Encrypt with AES-GCM
+            aesgcm = AESGCM(derived_key)
+            value_bytes = value.encode('utf-8')
+            
+            # Additional authenticated data (version info for future upgrades)
+            aad = b'finchat_secrets_v2'
+            ciphertext = aesgcm.encrypt(iv, value_bytes, aad)
+            
+            # Format: version(2) + IV(12) + ciphertext_with_tag(variable)
+            version_prefix = b'v2'
+            encrypted_data = version_prefix + iv + ciphertext
+            
+            return base64.b64encode(encrypted_data).decode('ascii')
+            
+        except ImportError:
+            # Fallback to legacy XOR encryption if cryptography not available
+            logger.warning("Cryptography library not available, using legacy XOR encryption")
+            return self._encrypt_value_legacy(value)
     
     def _decrypt_value(self, encrypted_value: str) -> str:
-        """Decrypt secret value using configured key."""
+        """Decrypt secret value with format detection and backward compatibility."""
         if not self.encryption_key:
             raise ValueError("No encryption key configured")
         
+        try:
+            encrypted_bytes = base64.b64decode(encrypted_value.encode('ascii'))
+            
+            # Check for version prefix to determine format
+            if encrypted_bytes.startswith(b'v2'):
+                return self._decrypt_value_v2(encrypted_bytes)
+            else:
+                # Legacy XOR-encrypted data (no version prefix)
+                return self._decrypt_value_legacy(encrypted_bytes)
+                
+        except Exception as e:
+            # Constant-time error handling to prevent timing attacks
+            import time
+            time.sleep(0.001)  # Small constant delay
+            raise ValueError("Failed to decrypt secret value") from e
+    
+    def _decrypt_value_v2(self, encrypted_bytes: bytes) -> str:
+        """Decrypt AES-GCM encrypted value (v2 format)."""
+        try:
+            from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+            from cryptography.hazmat.primitives import hashes
+            from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+            
+            # Extract components: version(2) + IV(12) + ciphertext_with_tag
+            if len(encrypted_bytes) < 2 + 12 + 16:  # version + IV + min ciphertext + tag
+                raise ValueError("Invalid encrypted data format")
+            
+            version_prefix = encrypted_bytes[:2]
+            iv = encrypted_bytes[2:14]
+            ciphertext = encrypted_bytes[14:]
+            
+            # Derive AES key using same parameters as encryption
+            salt = b'finchat_secrets_salt_v1'
+            kdf = PBKDF2HMAC(
+                algorithm=hashes.SHA256(),
+                length=32,  # AES-256
+                salt=salt,
+                iterations=100000,
+            )
+            derived_key = kdf.derive(self.encryption_key)
+            
+            # Decrypt with AES-GCM
+            aesgcm = AESGCM(derived_key)
+            aad = b'finchat_secrets_v2'
+            decrypted_bytes = aesgcm.decrypt(iv, ciphertext, aad)
+            
+            return decrypted_bytes.decode('utf-8')
+            
+        except ImportError:
+            raise ValueError("Cryptography library required for v2 format decryption")
+    
+    def _decrypt_value_legacy(self, encrypted_bytes: bytes) -> str:
+        """Decrypt legacy XOR-encrypted value for backward compatibility."""
         key_hash = hashlib.sha256(self.encryption_key).digest()
-        
-        # Reverse XOR encryption
-        encrypted_bytes = base64.b64decode(encrypted_value.encode('ascii'))
         decrypted_bytes = bytes(a ^ b for a, b in zip(encrypted_bytes, key_hash * (len(encrypted_bytes) // len(key_hash) + 1)))
-        
         return decrypted_bytes.decode('utf-8')
+    
+    def _encrypt_value_legacy(self, value: str) -> str:
+        """Legacy XOR encryption fallback."""
+        key_hash = hashlib.sha256(self.encryption_key).digest()
+        value_bytes = value.encode('utf-8')
+        encrypted_bytes = bytes(a ^ b for a, b in zip(value_bytes, key_hash * (len(value_bytes) // len(key_hash) + 1)))
+        return base64.b64encode(encrypted_bytes).decode('ascii')
     
     def _audit_secret_access(self, secret_name: str, source: str) -> None:
         """Log secret access for audit purposes (without revealing the value)."""

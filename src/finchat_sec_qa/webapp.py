@@ -6,6 +6,8 @@ import time
 import hmac
 import hashlib
 import re
+import secrets
+import base64
 from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Optional, Any, Union
@@ -22,6 +24,48 @@ from .rate_limiting import DistributedRateLimiter
 
 # Backward compatibility - RateLimiter is now an alias for DistributedRateLimiter
 RateLimiter = DistributedRateLimiter
+
+
+class CSRFProtection:
+    """CSRF token management and validation."""
+    
+    def __init__(self) -> None:
+        self.tokens: Dict[str, float] = {}  # token -> expiry_time
+        self.secret_key = os.urandom(32)  # Session-specific secret
+    
+    def generate_token(self) -> str:
+        """Generate a new CSRF token."""
+        token = secrets.token_urlsafe(32)
+        config = get_config()
+        expiry_time = time.time() + config.CSRF_TOKEN_EXPIRY_SECONDS
+        self.tokens[token] = expiry_time
+        
+        # Clean up expired tokens
+        self._cleanup_expired_tokens()
+        
+        return token
+    
+    def validate_token(self, token: str) -> bool:
+        """Validate a CSRF token."""
+        if not token or token not in self.tokens:
+            return False
+        
+        # Check if token is expired
+        if time.time() > self.tokens[token]:
+            del self.tokens[token]
+            return False
+        
+        return True
+    
+    def _cleanup_expired_tokens(self) -> None:
+        """Remove expired tokens from memory."""
+        current_time = time.time()
+        expired_tokens = [
+            token for token, expiry in self.tokens.items()
+            if current_time > expiry
+        ]
+        for token in expired_tokens:
+            del self.tokens[token]
 
 
 class BruteForceProtection:
@@ -66,10 +110,14 @@ class BruteForceProtection:
 
 
 app = Flask(__name__)
+
+# Configure Flask security settings
+config = get_config()
+app.config['MAX_CONTENT_LENGTH'] = config.MAX_REQUEST_SIZE_MB * 1024 * 1024  # Convert MB to bytes
+
 configure_logging("INFO")
 logger = logging.getLogger(__name__)
 
-config = get_config()
 SECRET_TOKEN = config.SECRET_TOKEN
 client = EdgarClient("FinChatWeb")
 engine = FinancialQAEngine(
@@ -81,6 +129,7 @@ query_handler = QueryHandler(client, engine)
 # Security components
 rate_limiter = RateLimiter()  # Uses config defaults
 brute_force_protection = BruteForceProtection()
+csrf_protection = CSRFProtection()
 
 # Resource cleanup using Flask teardown handlers instead of atexit
 @app.teardown_appcontext
@@ -245,6 +294,49 @@ def _add_cors_headers(response: Response) -> None:
             response.headers['Access-Control-Allow-Credentials'] = 'true'
 
 
+@app.before_request
+def add_security_headers() -> None:
+    """Add security headers to all responses."""
+    # Skip security headers for OPTIONS requests
+    if request.method == 'OPTIONS':
+        return
+    
+    @app.after_request
+    def apply_security_headers(response: Response) -> Response:
+        # Security headers
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options'] = 'DENY'
+        response.headers['X-XSS-Protection'] = '1; mode=block'
+        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+        response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'"
+        return response
+
+
+def _validate_csrf_token() -> None:
+    """Validate CSRF token for state-changing operations."""
+    if request.method in ['POST', 'PUT', 'DELETE', 'PATCH']:
+        # Exempt certain endpoints from CSRF protection
+        exempt_paths = ['/csrf-token']  # CSRF token generation itself
+        if request.path in exempt_paths:
+            return
+            
+        csrf_token = request.headers.get('X-CSRF-Token')
+        if not csrf_token or not csrf_protection.validate_token(csrf_token):
+            logger.warning("CSRF token validation failed for IP: %s", _get_client_ip())
+            abort(403, description="CSRF token missing or invalid")
+
+
+@app.route('/csrf-token', methods=['GET'])
+def get_csrf_token() -> Response:
+    """Generate and return a CSRF token."""
+    _auth()  # Require authentication for CSRF token
+    
+    token = csrf_protection.generate_token()
+    response = jsonify({'csrf_token': token})
+    _add_cors_headers(response)
+    return response
+
+
 @app.route('/<path:path>', methods=['OPTIONS'])
 @app.route('/', methods=['OPTIONS'])
 def handle_options(path: str = '') -> Response:
@@ -257,6 +349,7 @@ def handle_options(path: str = '') -> Response:
 @app.route("/query", methods=["POST"])
 def query() -> Response:
     _auth()
+    _validate_csrf_token()
     data = request.json or {}
     
     # Validate request data using shared validation
@@ -301,6 +394,7 @@ def query() -> Response:
 @app.route("/risk", methods=["POST"])
 def risk_endpoint() -> Response:
     _auth()
+    _validate_csrf_token()
     data = request.json or {}
     
     # Validate request data using shared validation

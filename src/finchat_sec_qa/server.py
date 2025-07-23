@@ -6,9 +6,11 @@ from typing import Type, Dict, Any, List
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from pydantic import BaseModel
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from .edgar_client import AsyncEdgarClient
 from .qa_engine import FinancialQAEngine
@@ -18,6 +20,42 @@ from .config import get_config
 from .query_handler import AsyncQueryHandler
 from .validation import validate_text_safety, validate_ticker
 from .metrics import MetricsMiddleware, record_qa_query, record_risk_analysis, update_service_health, get_metrics
+
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """Middleware to add security headers to all responses."""
+    
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        
+        # Add security headers
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options'] = 'DENY'
+        response.headers['X-XSS-Protection'] = '1; mode=block'
+        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+        response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'"
+        
+        return response
+
+
+class RequestSizeLimitMiddleware(BaseHTTPMiddleware):
+    """Middleware to enforce request size limits."""
+    
+    def __init__(self, app, max_size_bytes: int):
+        super().__init__(app)
+        self.max_size_bytes = max_size_bytes
+    
+    async def dispatch(self, request: Request, call_next):
+        # Check Content-Length header
+        content_length = request.headers.get('content-length')
+        if content_length:
+            if int(content_length) > self.max_size_bytes:
+                raise HTTPException(
+                    status_code=413, 
+                    detail=f"Request too large. Maximum size is {self.max_size_bytes} bytes"
+                )
+        
+        return await call_next(request)
 
 
 @asynccontextmanager
@@ -45,14 +83,20 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-# Add CORS middleware
+# Security configuration
 config = get_config()
+
+# Add security middleware (order matters - most specific first)
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(RequestSizeLimitMiddleware, max_size_bytes=config.MAX_REQUEST_SIZE_MB * 1024 * 1024)
+
+# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=config.CORS_ALLOWED_ORIGINS,
     allow_credentials=config.CORS_ALLOW_CREDENTIALS,
     allow_methods=['GET', 'POST', 'OPTIONS'],
-    allow_headers=['Content-Type', 'Authorization'],
+    allow_headers=['Content-Type', 'Authorization', 'X-CSRF-Token'],  # Allow CSRF token header
     max_age=config.CORS_MAX_AGE,
 )
 
