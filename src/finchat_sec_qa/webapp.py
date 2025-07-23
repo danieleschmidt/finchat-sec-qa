@@ -18,32 +18,10 @@ from .logging_utils import configure_logging
 from .config import get_config
 from .query_handler import QueryHandler
 from .validation import validate_text_safety, validate_ticker
+from .rate_limiting import DistributedRateLimiter
 
-class RateLimiter:
-    """Rate limiting with sliding window."""
-    
-    def __init__(self, max_requests: Optional[int] = None, window_seconds: Optional[int] = None) -> None:
-        config = get_config()
-        self.max_requests = max_requests or config.RATE_LIMIT_MAX_REQUESTS
-        self.window_seconds = window_seconds or config.RATE_LIMIT_WINDOW_SECONDS
-        self.requests: Dict[str, List[float]] = defaultdict(list)
-    
-    def is_allowed(self, client_id: str) -> bool:
-        """Check if client is within rate limits."""
-        now = time.time()
-        
-        # Clean old requests outside the window
-        self.requests[client_id] = [
-            req_time for req_time in self.requests[client_id]
-            if now - req_time < self.window_seconds
-        ]
-        
-        # Check if under limit
-        if len(self.requests[client_id]) < self.max_requests:
-            self.requests[client_id].append(now)
-            return True
-        
-        return False
+# Backward compatibility - RateLimiter is now an alias for DistributedRateLimiter
+RateLimiter = DistributedRateLimiter
 
 
 class BruteForceProtection:
