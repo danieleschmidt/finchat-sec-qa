@@ -200,11 +200,49 @@
 - Item #3 (input validation) depends on understanding current API usage patterns
 - Item #8 (citation accuracy) may require changes to the embedding/retrieval pipeline
 
-Last Updated: 2025-07-22
+Last Updated: 2025-07-23
 Next Review: Weekly during sprint planning
 
 ## Current Implementation Target
-**Python SDK Development Completed!** 
+**Security Hardening Phase (Increment 4)**
+
+### Critical Security Items (WSJF > 8.0)
+
+### 20. ✅ Implement CORS Configuration - COMPLETED
+- **File**: `src/finchat_sec_qa/server.py`, `src/finchat_sec_qa/webapp.py`, `src/finchat_sec_qa/config.py`
+- **Value**: 9 | **Criticality**: 9 | **Risk**: 9 | **Size**: 3
+- **WSJF**: 9.00
+- **Description**: Critical security vulnerability - no CORS configuration allowing cross-origin attacks
+- **Status**: ✅ **COMPLETED** - Implemented secure CORS with origin whitelist, credentials control, and security validation
+- **Effort**: 3 hours
+- **Risk**: Low
+- **Implementation**: Added CORS middleware for FastAPI, Flask CORS handlers, environment-configurable origin whitelist, security validation preventing wildcard+credentials
+
+### 21. Replace In-Memory Rate Limiting with Distributed Solution
+- **File**: `src/finchat_sec_qa/webapp.py:22-46`
+- **Value**: 9 | **Criticality**: 8 | **Risk**: 8 | **Size**: 4
+- **WSJF**: 6.25
+- **Description**: Rate limiting uses in-memory storage vulnerable to bypass across instances/restarts
+- **Effort**: 4-6 hours
+- **Risk**: Medium
+
+### 22. Implement Proper Secrets Management
+- **File**: `src/finchat_sec_qa/config.py:81`
+- **Value**: 9 | **Criticality**: 8 | **Risk**: 8 | **Size**: 5
+- **WSJF**: 5.00
+- **Description**: Authentication token stored in environment variable without encryption
+- **Effort**: 5-7 hours
+- **Risk**: Medium
+
+### 23. ✅ Add Input Sanitization for File Operations - COMPLETED
+- **File**: `src/finchat_sec_qa/query_handler.py:129,259`, `src/finchat_sec_qa/file_security.py`
+- **Value**: 8 | **Criticality**: 8 | **Risk**: 8 | **Size**: 3 
+- **WSJF**: 8.00
+- **Description**: File path operations without proper sanitization risk path traversal attacks
+- **Status**: ✅ **COMPLETED** - Implemented secure file operations with path validation, traversal prevention, and symlink attack protection
+- **Effort**: 3 hours
+- **Risk**: Low
+- **Implementation**: Created file_security.py module with validate_file_path() and safe_read_file(), updated query_handler.py to use secure operations, comprehensive test coverage including symlink attacks
 
 ### Next Phase: Documentation & Code Quality (Increment 3)
 

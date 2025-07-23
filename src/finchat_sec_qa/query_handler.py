@@ -8,7 +8,8 @@ from typing import Tuple, List
 
 from .edgar_client import EdgarClient, AsyncEdgarClient, FilingMetadata
 from .qa_engine import FinancialQAEngine
-from .citation import Citation
+from .citation import Citation  
+from .file_security import safe_read_file
 
 
 logger = logging.getLogger(__name__)
@@ -122,11 +123,12 @@ class QueryHandler:
             
         Raises:
             FileNotFoundError: If filing download or reading fails
+            ValueError: If file path validation fails (security)
         """
         logger.debug("Downloading filing: %s", filing.accession_no)
         
         path = self.client.download_filing(filing)
-        filing_text = Path(path).read_text()
+        filing_text = safe_read_file(path)
         
         logger.debug("Filing downloaded and read, length: %d chars", len(filing_text))
         return filing_text
@@ -249,14 +251,15 @@ class AsyncQueryHandler:
             
         Raises:
             FileNotFoundError: If filing download or reading fails
+            ValueError: If file path validation fails (security)
         """
         logger.debug("Downloading filing: %s (async)", filing.accession_no)
         
         path = await self.client.download_filing(filing)
         
-        # Read file asynchronously using asyncio
+        # Read file asynchronously using asyncio with secure file operations
         loop = asyncio.get_event_loop()
-        filing_text = await loop.run_in_executor(None, lambda: Path(path).read_text())
+        filing_text = await loop.run_in_executor(None, lambda: safe_read_file(path))
         
         logger.debug("Filing downloaded and read (async), length: %d chars", len(filing_text))
         return filing_text

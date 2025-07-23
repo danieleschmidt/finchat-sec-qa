@@ -4,7 +4,7 @@ This module provides a centralized way to manage all configuration values,
 supporting environment variable overrides and validation.
 """
 import os
-from typing import Optional
+from typing import Optional, List
 
 
 class Config:
@@ -80,6 +80,18 @@ class Config:
         # Authentication token
         self.SECRET_TOKEN = os.getenv('FINCHAT_TOKEN')
         
+        # CORS configuration
+        self.CORS_ALLOWED_ORIGINS = self._get_list_env(
+            'FINCHAT_CORS_ALLOWED_ORIGINS', 
+            ['http://localhost:3000', 'http://localhost:8080']  # Default for development
+        )
+        self.CORS_ALLOW_CREDENTIALS = self._get_bool_env(
+            'FINCHAT_CORS_ALLOW_CREDENTIALS', False
+        )
+        self.CORS_MAX_AGE = self._get_int_env(
+            'FINCHAT_CORS_MAX_AGE', 86400  # 24 hours
+        )
+        
         # Validate configuration
         self._validate()
     
@@ -92,6 +104,21 @@ class Config:
             return int(value)
         except ValueError:
             raise ValueError(f"Environment variable {key} must be a valid integer, got: {value}")
+    
+    def _get_bool_env(self, key: str, default: bool) -> bool:
+        """Get boolean value from environment variable with default."""
+        value = os.getenv(key)
+        if value is None:
+            return default
+        return value.lower() in ('true', '1', 'yes', 'on')
+    
+    def _get_list_env(self, key: str, default: List[str]) -> List[str]:
+        """Get list value from environment variable with default."""
+        value = os.getenv(key)
+        if value is None:
+            return default
+        # Split by comma and strip whitespace
+        return [item.strip() for item in value.split(',') if item.strip()]
     
     def _validate(self) -> None:
         """Validate configuration values."""
@@ -133,6 +160,19 @@ class Config:
         
         if self.CHUNK_OVERLAP >= self.CHUNK_SIZE:
             raise ValueError("CHUNK_OVERLAP must be less than CHUNK_SIZE")
+        
+        # CORS validation
+        if not isinstance(self.CORS_ALLOWED_ORIGINS, list):
+            raise ValueError("CORS_ALLOWED_ORIGINS must be a list")
+        
+        if self.CORS_MAX_AGE < 0:
+            raise ValueError("CORS_MAX_AGE must be non-negative")
+        
+        # Security check: warn if wildcard with credentials
+        if '*' in self.CORS_ALLOWED_ORIGINS and self.CORS_ALLOW_CREDENTIALS:
+            raise ValueError(
+                "Security risk: CORS_ALLOW_CREDENTIALS cannot be True when wildcard '*' is in allowed origins"
+            )
 
 
 # Singleton instance for consistent configuration across the application
