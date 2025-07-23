@@ -124,14 +124,55 @@ def _validate_token_constant_time(provided_token: str, expected_token: str) -> b
 
 
 def _get_client_ip() -> str:
-    """Get client IP address, considering proxy headers."""
-    # Check for forwarded IP (common in production behind load balancers)
-    forwarded_ip = request.headers.get('X-Forwarded-For')
-    if forwarded_ip:
-        # Take the first IP in case of multiple
-        return forwarded_ip.split(',')[0].strip()
+    """Get client IP address with secure proxy header validation."""
+    import ipaddress
     
-    return request.environ.get('REMOTE_ADDR', 'unknown')
+    direct_ip = request.environ.get('REMOTE_ADDR', 'unknown')
+    
+    # Only trust proxy headers if they come from trusted networks
+    try:
+        direct_addr = ipaddress.ip_address(direct_ip)
+        
+        # Define trusted proxy networks (private networks commonly used for load balancers)
+        trusted_networks = [
+            ipaddress.ip_network('10.0.0.0/8'),      # Private network
+            ipaddress.ip_network('172.16.0.0/12'),   # Private network  
+            ipaddress.ip_network('192.168.0.0/16'),  # Private network
+            ipaddress.ip_network('127.0.0.0/8'),     # Localhost
+        ]
+        
+        # Check if direct IP is from a trusted proxy
+        is_trusted_proxy = any(direct_addr in network for network in trusted_networks)
+        
+        if is_trusted_proxy:
+            # Check X-Forwarded-For first
+            forwarded_ip = request.headers.get('X-Forwarded-For')
+            if forwarded_ip:
+                # Take the first IP and validate it
+                client_ip = forwarded_ip.split(',')[0].strip()
+                try:
+                    # Validate that it's a valid IP address
+                    ipaddress.ip_address(client_ip)
+                    return client_ip
+                except ValueError:
+                    # Invalid IP in header, fall back to direct IP
+                    pass
+            
+            # Check X-Real-IP as secondary option
+            real_ip = request.headers.get('X-Real-IP')
+            if real_ip:
+                try:
+                    ipaddress.ip_address(real_ip.strip())
+                    return real_ip.strip()
+                except ValueError:
+                    pass
+    
+    except ValueError:
+        # Invalid direct IP, this shouldn't happen in normal operations
+        pass
+    
+    # Return direct IP if no trusted proxy headers or validation failed
+    return direct_ip
 
 
 def _auth() -> None:
@@ -157,12 +198,12 @@ def _auth() -> None:
         logger.warning("IP blocked due to brute force attempts: %s", client_ip)
         abort(429, description="Too many failed attempts. Try again later.")
     
-    # Extract token from header or query parameter
+    # Extract token from Authorization header only (security: no query parameter tokens)
     auth_header = request.headers.get('Authorization', '')
     if auth_header.startswith('Bearer '):
         provided_token = auth_header[7:]  # Remove 'Bearer ' prefix
     else:
-        provided_token = request.args.get("token")
+        provided_token = None  # No fallback to query parameters for security
     
     # Validate token
     if not provided_token or not _validate_token_constant_time(provided_token, SECRET_TOKEN):
