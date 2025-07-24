@@ -167,8 +167,10 @@ class DistributedRateLimiter:
             try:
                 key = f"rate_limit:{client_id}"
                 self.redis_client.delete(key)
-            except Exception as e:
+            except (redis.ConnectionError, redis.TimeoutError, redis.RedisError) as e:
                 logger.warning(f"Failed to reset Redis rate limit for {client_id}: {e}")
+            except Exception as e:
+                logger.error(f"Unexpected error resetting Redis rate limit for {client_id}: {e}")
         
         # Also reset in-memory storage
         self.fallback_storage.delete(client_id)
@@ -186,8 +188,12 @@ class DistributedRateLimiter:
                 current_count = int(self.redis_client.zcard(key) or 0)  # type: ignore
                 
                 return max(0, self.max_requests - current_count)
-            except Exception:
-                pass
+            except (redis.ConnectionError, redis.TimeoutError, redis.RedisError) as e:
+                logger.debug(f"Redis error getting remaining requests for {client_id}: {e}")
+            except (ValueError, TypeError) as e:
+                logger.warning(f"Data conversion error for remaining requests {client_id}: {e}")
+            except Exception as e:
+                logger.error(f"Unexpected error getting remaining requests for {client_id}: {e}")
         
         # Fallback to memory count
         now = time.time()

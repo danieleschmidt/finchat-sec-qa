@@ -4,7 +4,7 @@ import re
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Dict
 from urllib.parse import urljoin, quote
 
 import asyncio
@@ -47,6 +47,7 @@ class EdgarClient:
         self.timeout = timeout
         self.cache_dir = Path(cache_dir or Path.home() / ".cache" / "finchat_sec_qa")
         self.session = session or requests.Session()
+        self._ticker_cache: Optional[Dict[str, str]] = None
         retry_strategy = Retry(
             total=retries,
             backoff_factor=1,
@@ -76,17 +77,37 @@ class EdgarClient:
         """Validate and sanitize accession number."""
         return validate_accession_number(accession)
 
+    def _load_ticker_cache(self) -> Dict[str, str]:
+        """Load and cache ticker-to-CIK mapping for efficient lookups."""
+        if self._ticker_cache is not None:
+            return self._ticker_cache
+            
+        mapping_url = urljoin(self.BASE_URL, "/files/company_tickers.json")
+        self.logger.debug("Loading ticker mapping cache")
+        data = self._get(mapping_url).json()
+        
+        # Build efficient hash map for O(1) lookups
+        self._ticker_cache = {
+            entry["ticker"].upper(): str(entry["cik_str"])
+            for entry in data.values()
+        }
+        
+        self.logger.info("Loaded %d ticker mappings into cache", len(self._ticker_cache))
+        return self._ticker_cache
+    
     def ticker_to_cik(self, ticker: str) -> str:
         """Return the CIK (Central Index Key) for a given ticker symbol."""
         ticker = self._validate_ticker(ticker)
-        mapping_url = urljoin(self.BASE_URL, "/files/company_tickers.json")
         self.logger.debug("Resolving ticker %s", ticker)
-        data = self._get(mapping_url).json()
-        for entry in data.values():
-            if entry["ticker"].upper() == ticker:
-                cik = str(entry["cik_str"])
-                return self._validate_cik(cik)
-        raise ValueError(f"Ticker '{ticker}' not found")
+        
+        # Use cached ticker mapping for O(1) lookup
+        ticker_cache = self._load_ticker_cache()
+        cik = ticker_cache.get(ticker)
+        
+        if cik is None:
+            raise ValueError(f"Ticker '{ticker}' not found")
+            
+        return self._validate_cik(cik)
 
     def get_recent_filings(
         self, ticker: str, form_type: str = "10-K", limit: int = 10
@@ -195,6 +216,7 @@ class AsyncEdgarClient:
             self.session = session
             
         self.logger = logging.getLogger(__name__)
+        self._ticker_cache: Optional[Dict[str, str]] = None
 
     async def __aenter__(self):
         """Async context manager entry."""
@@ -223,18 +245,38 @@ class AsyncEdgarClient:
         """Validate and sanitize accession number."""
         return validate_accession_number(accession)
 
+    async def _load_ticker_cache(self) -> Dict[str, str]:
+        """Load and cache ticker-to-CIK mapping for efficient lookups."""
+        if self._ticker_cache is not None:
+            return self._ticker_cache
+            
+        mapping_url = urljoin(self.BASE_URL, "/files/company_tickers.json")
+        self.logger.debug("Loading ticker mapping cache")
+        response = await self._get(mapping_url)
+        data = response.json()
+        
+        # Build efficient hash map for O(1) lookups
+        self._ticker_cache = {
+            entry["ticker"].upper(): str(entry["cik_str"])
+            for entry in data.values()
+        }
+        
+        self.logger.info("Loaded %d ticker mappings into cache", len(self._ticker_cache))
+        return self._ticker_cache
+    
     async def ticker_to_cik(self, ticker: str) -> str:
         """Return the CIK (Central Index Key) for a given ticker symbol."""
         ticker = self._validate_ticker(ticker)
-        mapping_url = urljoin(self.BASE_URL, "/files/company_tickers.json")
         self.logger.debug("Resolving ticker %s", ticker)
-        response = await self._get(mapping_url)
-        data = response.json()
-        for entry in data.values():
-            if entry["ticker"].upper() == ticker:
-                cik = str(entry["cik_str"])
-                return self._validate_cik(cik)
-        raise ValueError(f"Ticker '{ticker}' not found")
+        
+        # Use cached ticker mapping for O(1) lookup
+        ticker_cache = await self._load_ticker_cache()
+        cik = ticker_cache.get(ticker)
+        
+        if cik is None:
+            raise ValueError(f"Ticker '{ticker}' not found")
+            
+        return self._validate_cik(cik)
 
     async def get_recent_filings(
         self, ticker: str, form_type: str = "10-K", limit: int = 10

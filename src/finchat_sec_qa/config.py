@@ -4,10 +4,13 @@ This module provides a centralized way to manage all configuration values,
 supporting environment variable overrides and validation.
 """
 import os
+import logging
 from typing import Optional, List, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .secrets_manager import SecretsManager
+
+logger = logging.getLogger(__name__)
 
 
 class Config:
@@ -180,8 +183,13 @@ class Config:
         """Get authentication token using secrets manager."""
         try:
             return self.secrets_manager.get_secret('FINCHAT_TOKEN')
-        except Exception:
+        except (KeyError, ValueError) as e:
             # Fallback to direct environment variable for backward compatibility
+            logger.debug(f"Secret not found in secrets manager, using env var: {e}")
+            return os.getenv('FINCHAT_TOKEN')
+        except Exception as e:
+            # Unexpected errors should be logged but still fallback
+            logger.warning(f"Unexpected error accessing secrets manager: {e}")
             return os.getenv('FINCHAT_TOKEN')
     
     def _validate(self) -> None:
