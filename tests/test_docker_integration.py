@@ -121,6 +121,15 @@ class TestDockerIntegration:
                         assert os.access(file_path, os.X_OK), "entrypoint.sh should be executable"
 
 
+def _docker_available():
+    """Check if Docker is available on the system."""
+    try:
+        subprocess.run(["docker", "--version"], check=True, capture_output=True)
+        return True
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return False
+
+
 class TestDockerBuildValidation:
     """Test Docker build process validation (requires Docker)."""
     
