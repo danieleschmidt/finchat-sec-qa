@@ -15,6 +15,11 @@ All notable changes to this project will be documented in this file.
   - Prevents potential path traversal attacks that were previously only logged
   - Updated patterns to be more precise (../ instead of .. to avoid false positives)
   - Added comprehensive test coverage for blocked suspicious patterns
+- **MEDIUM FIX**: Improved exception handling specificity in webapp (WSJF: 6.67)
+  - Replaced broad Exception handlers with specific exception types
+  - Added proper error context with exc_info=True for unexpected errors
+  - Improved error visibility and debugging capabilities
+  - Better error categorization for different failure types (I/O, network, validation, etc.)
 
 ### Performance
 - **CLEANUP**: Removed deprecated sequential multi-company processing function (WSJF: 9.00)
