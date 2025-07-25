@@ -11,6 +11,13 @@ All notable changes to this project will be documented in this file.
   - Added comprehensive timing attack prevention test coverage
 - Enhanced secret verification with consistent dummy value generation based on input length
 
+### Performance
+- **CLEANUP**: Removed deprecated sequential multi-company processing function (WSJF: 9.00)
+  - Eliminated `compare_question_across_filings_sequential()` function that could cause performance degradation
+  - Function was kept for backwards compatibility but posed risk of accidental use
+  - All functionality now uses optimized parallel processing implementation
+  - Reduced code complexity and maintenance burden
+
 ## [1.4.7] - 2025-07-22
 ### Added
 - Comprehensive contributor documentation for improved developer onboarding
