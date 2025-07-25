@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.8] - 2025-07-25
+### Security
+- **CRITICAL FIX**: Eliminated timing attack vulnerability in secrets manager (WSJF: 14.50)
+  - Fixed `verify_secret()` method to maintain constant time regardless of secret existence
+  - Previous implementation revealed secret existence through timing differences
+  - Now performs consistent operations and comparisons for both existing and non-existent secrets
+  - Added comprehensive timing attack prevention test coverage
+- Enhanced secret verification with consistent dummy value generation based on input length
+
 ## [1.4.7] - 2025-07-22
 ### Added
 - Comprehensive contributor documentation for improved developer onboarding

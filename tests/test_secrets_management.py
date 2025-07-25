@@ -195,3 +195,29 @@ class TestSecretsManagerSecurity:
             # Time difference should be minimal (within 10ms)
             time_diff = abs(correct_time - wrong_time)
             assert time_diff < 0.01, f"Timing difference too large: {time_diff}s"
+
+    def test_timing_attack_prevention_nonexistent_secret(self):
+        """Test constant-time comparison when secret doesn't exist."""
+        manager = SecretsManager()
+        
+        # Test timing for existing vs non-existent secrets
+        with patch.dict(os.environ, {'EXISTING_SECRET': 'correct_value'}):
+            import time
+            
+            # Time for existing secret with wrong value
+            start = time.time()
+            result1 = manager.verify_secret('EXISTING_SECRET', 'wrong_value')
+            existing_time = time.time() - start
+            
+            # Time for non-existent secret
+            start = time.time()
+            result2 = manager.verify_secret('NONEXISTENT_SECRET', 'any_value')
+            nonexistent_time = time.time() - start
+            
+            # Both should return False
+            assert result1 is False
+            assert result2 is False
+            
+            # Time difference should be minimal (within 10ms) to prevent timing attacks
+            time_diff = abs(existing_time - nonexistent_time)
+            assert time_diff < 0.01, f"Timing difference reveals secret existence: {time_diff}s"
