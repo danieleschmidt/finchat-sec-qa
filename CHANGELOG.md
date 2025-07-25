@@ -9,7 +9,12 @@ All notable changes to this project will be documented in this file.
   - Previous implementation revealed secret existence through timing differences
   - Now performs consistent operations and comparisons for both existing and non-existent secrets
   - Added comprehensive timing attack prevention test coverage
-- Enhanced secret verification with consistent dummy value generation based on input length
+- Enhanced secret verification with consistent dummy value generation based in input length
+- **HIGH FIX**: Made path validation blocking instead of advisory (WSJF: 8.33)
+  - Suspicious path patterns now raise ValueError instead of just logging warnings
+  - Prevents potential path traversal attacks that were previously only logged
+  - Updated patterns to be more precise (../ instead of .. to avoid false positives)
+  - Added comprehensive test coverage for blocked suspicious patterns
 
 ### Performance
 - **CLEANUP**: Removed deprecated sequential multi-company processing function (WSJF: 9.00)

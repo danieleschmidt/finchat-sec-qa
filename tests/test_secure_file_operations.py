@@ -174,3 +174,24 @@ def test_safe_read_file_symlink_attack():
     finally:
         symlink_path.unlink(missing_ok=True)
         os.unlink(target_file)
+
+
+def test_suspicious_pattern_detection_should_block():
+    """Test that suspicious patterns should be blocked, not just logged - FAILS with current implementation."""
+    cache_dir = Path.home() / ".cache" / "finchat_sec_qa"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Create a test file with suspicious pattern in path
+    test_dir = cache_dir / "etc"
+    test_dir.mkdir(exist_ok=True)
+    test_file = test_dir / "config"
+    test_file.write_text("test content")
+    
+    try:
+        # After fix: should raise ValueError for suspicious patterns
+        with pytest.raises(ValueError, match="Suspicious path pattern.*etc"):
+            safe_read_file(str(test_file))
+            
+    finally:
+        test_file.unlink(missing_ok=True)
+        test_dir.rmdir()
