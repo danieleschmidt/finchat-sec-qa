@@ -221,3 +221,36 @@ class TestSecretsManagerSecurity:
             # Time difference should be minimal (within 10ms) to prevent timing attacks
             time_diff = abs(existing_time - nonexistent_time)
             assert time_diff < 0.01, f"Timing difference reveals secret existence: {time_diff}s"
+    
+    def test_no_weak_encryption_fallback(self):
+        """Test that weak XOR encryption fallback is not available."""
+        key_32_bytes = 'a' * 32
+        manager = SecretsManager(provider='local', encryption_key=key_32_bytes)
+        
+        # Mock ImportError for cryptography library
+        with patch('finchat_sec_qa.secrets_manager.AES') as mock_aes:
+            mock_aes.side_effect = ImportError("Mocked import error")
+            
+            # Should raise ImportError instead of falling back to weak encryption
+            with pytest.raises(ImportError, match="AES-GCM encryption requires the cryptography library"):
+                manager.store_secret('test_secret', 'test_value')
+    
+    def test_legacy_xor_methods_removed(self):
+        """Test that legacy XOR encryption methods have been removed."""
+        manager = SecretsManager()
+        
+        # These methods should not exist anymore
+        assert not hasattr(manager, '_encrypt_value_legacy')
+        assert not hasattr(manager, '_decrypt_value_legacy')
+    
+    def test_cryptography_library_required(self):
+        """Test that cryptography library is required for secure operations."""
+        with patch('finchat_sec_qa.secrets_manager.AES') as mock_aes:
+            mock_aes.side_effect = ImportError("No module named 'cryptography'")
+            
+            key_32_bytes = 'a' * 32
+            manager = SecretsManager(provider='local', encryption_key=key_32_bytes)
+            
+            # Should fail gracefully with clear error message
+            with pytest.raises(ImportError, match="AES-GCM encryption requires the cryptography library"):
+                manager.store_secret('critical_secret', 'secure_value')
