@@ -83,34 +83,3 @@ def compare_question_across_filings(
     logger.info("Completed parallel processing of %d documents", len(results))
     return results
 
-
-def compare_question_across_filings_sequential(
-    question: str, documents: Dict[str, str]
-) -> List[CompanyAnswer]:
-    """Sequential version for comparison/fallback - DEPRECATED.
-    
-    This is the original sequential implementation kept for backwards compatibility
-    and performance comparison. Use compare_question_across_filings() instead.
-    """
-    if not question:
-        raise ValueError("question must be provided")
-    if not documents:
-        raise ValueError("documents must be provided")
-
-    logger.debug("Processing %d documents sequentially", len(documents))
-    
-    # Create single QA engine instance
-    engine = FinancialQAEngine()
-    
-    # Add all documents at once using bulk operations
-    documents_list = [(doc_id, text) for doc_id, text in documents.items()]
-    engine.add_documents(documents_list)
-    
-    # Query each document sequentially
-    results: List[CompanyAnswer] = []
-    for doc_id in documents.keys():
-        logger.debug("Querying document %s", doc_id)
-        answer, _ = engine.answer_with_citations(question)
-        results.append(CompanyAnswer(doc_id=doc_id, answer=answer))
-    
-    return results

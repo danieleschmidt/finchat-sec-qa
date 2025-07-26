@@ -136,8 +136,10 @@ def cleanup_resources(exception: Optional[Exception]) -> None:
         if engine is not None:
             engine.save()
             logger.debug("QA engine saved successfully")
-    except Exception as e:
+    except (OSError, IOError, AttributeError) as e:
         logger.error("Error during resource cleanup: %s", e)
+    except Exception as e:
+        logger.critical("Unexpected error during resource cleanup: %s", e, exc_info=True)
 
 
 def validate_token_strength(token: str) -> bool:
@@ -362,8 +364,11 @@ def query() -> Response:
     except ValueError as e:
         logger.warning("Invalid query request data: %s", e)
         abort(400, description=str(e))
+    except (KeyError, TypeError, AttributeError) as e:
+        logger.warning("Invalid request structure: %s", e)
+        abort(400, description="Invalid request format")
     except Exception as e:
-        logger.error("Unexpected error validating query request: %s", e)
+        logger.error("Unexpected error validating query request: %s", e, exc_info=True)
         abort(500, description="Internal server error")
     
     logger.info("Processing query for ticker: %s, question: %s", ticker, question[:50])
@@ -382,8 +387,14 @@ def query() -> Response:
     except FileNotFoundError as e:
         logger.error("Filing file not found: %s", e)
         abort(500, description="Error processing filing")
+    except (OSError, IOError) as e:
+        logger.error("File I/O error during query processing: %s", e)
+        abort(500, description="Error accessing filing data")
+    except (ConnectionError, TimeoutError) as e:
+        logger.error("Network error during query processing: %s", e)
+        abort(500, description="Error fetching filing data")
     except Exception as e:
-        logger.error("Error processing query: %s", e)
+        logger.error("Unexpected error processing query: %s", e, exc_info=True)
         abort(500, description="Error processing query")
 
 
@@ -399,8 +410,11 @@ def risk_endpoint() -> Response:
     except ValueError as e:
         logger.warning("Invalid risk request data: %s", e)
         abort(400, description=str(e))
+    except (KeyError, TypeError, AttributeError) as e:
+        logger.warning("Invalid risk request structure: %s", e)
+        abort(400, description="Invalid request format")
     except Exception as e:
-        logger.error("Unexpected error validating risk request: %s", e)
+        logger.error("Unexpected error validating risk request: %s", e, exc_info=True)
         abort(500, description="Internal server error")
     
     logger.info("Processing risk analysis for text of %d characters", len(text))
@@ -410,6 +424,12 @@ def risk_endpoint() -> Response:
         assessment = risk.assess(text)
         logger.info("Risk analysis completed with %d flags", len(assessment.flags))
         return jsonify({"sentiment": assessment.sentiment, "flags": assessment.flags})
+    except (AttributeError, ImportError) as e:
+        logger.error("Risk assessment module error: %s", e)
+        abort(500, description="Risk assessment service unavailable")
+    except (ValueError, TypeError) as e:
+        logger.warning("Invalid data for risk assessment: %s", e)
+        abort(400, description="Invalid text data for analysis")
     except Exception as e:
-        logger.error("Error performing risk assessment: %s", e)
+        logger.error("Unexpected error performing risk assessment: %s", e, exc_info=True)
         abort(500, description="Error performing risk assessment")

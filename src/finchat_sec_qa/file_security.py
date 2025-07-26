@@ -81,14 +81,15 @@ def validate_file_path(
     
     # Check for suspicious patterns
     suspicious_patterns = [
-        '..', '/etc/', '/proc/', '/sys/', '/dev/', '/var/log/',
+        '../', '/etc/', '/proc/', '/sys/', '/dev/', '/var/log/',
         'C:\\Windows\\', 'C:\\System32\\', '\\Windows\\', '\\System32\\',
         '~/', '$HOME', '%USERPROFILE%'
     ]
     
     for pattern in suspicious_patterns:
         if pattern in path_str:
-            logger.warning("Suspicious path pattern detected: %s in %s", pattern, path_str)
+            logger.error("Blocked suspicious path pattern: %s in %s", pattern, path_str)
+            raise ValueError(f"Suspicious path pattern detected: {pattern} in {path_str}")
     
     # Check if it's a symbolic link (potential symlink attack)
     if path.exists() and path.is_symlink():

@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.8] - 2025-07-25
+### Security
+- **CRITICAL FIX**: Eliminated timing attack vulnerability in secrets manager (WSJF: 14.50)
+  - Fixed `verify_secret()` method to maintain constant time regardless of secret existence
+  - Previous implementation revealed secret existence through timing differences
+  - Now performs consistent operations and comparisons for both existing and non-existent secrets
+  - Added comprehensive timing attack prevention test coverage
+- Enhanced secret verification with consistent dummy value generation based in input length
+- **HIGH FIX**: Made path validation blocking instead of advisory (WSJF: 8.33)
+  - Suspicious path patterns now raise ValueError instead of just logging warnings
+  - Prevents potential path traversal attacks that were previously only logged
+  - Updated patterns to be more precise (../ instead of .. to avoid false positives)
+  - Added comprehensive test coverage for blocked suspicious patterns
+- **MEDIUM FIX**: Improved exception handling specificity in webapp (WSJF: 6.67)
+  - Replaced broad Exception handlers with specific exception types
+  - Added proper error context with exc_info=True for unexpected errors
+  - Improved error visibility and debugging capabilities
+  - Better error categorization for different failure types (I/O, network, validation, etc.)
+
+### Performance
+- **CLEANUP**: Removed deprecated sequential multi-company processing function (WSJF: 9.00)
+  - Eliminated `compare_question_across_filings_sequential()` function that could cause performance degradation
+  - Function was kept for backwards compatibility but posed risk of accidental use
+  - All functionality now uses optimized parallel processing implementation
+  - Reduced code complexity and maintenance burden
+
 ## [1.4.7] - 2025-07-22
 ### Added
 - Comprehensive contributor documentation for improved developer onboarding

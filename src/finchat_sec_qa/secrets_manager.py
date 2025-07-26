@@ -319,14 +319,16 @@ class SecretsManager:
     
     def verify_secret(self, secret_name: str, provided_value: str) -> bool:
         """Verify provided value against stored secret (constant-time comparison)."""
+        # Always attempt to get the secret to maintain consistent timing
+        actual_value = None
         try:
             actual_value = self.get_secret(secret_name)
-            # Use constant-time comparison to prevent timing attacks
-            return hmac.compare_digest(actual_value.encode('utf-8'), provided_value.encode('utf-8'))
         except SecretNotFoundError:
-            # Still perform comparison to maintain constant time
-            hmac.compare_digest(b'dummy_value', provided_value.encode('utf-8'))
-            return False
+            # Use a consistent dummy value to maintain timing characteristics
+            actual_value = 'dummy_secret_value_' + 'x' * max(0, len(provided_value) - 19)
+        
+        # Always perform comparison with consistent timing regardless of secret existence
+        return hmac.compare_digest(actual_value.encode('utf-8'), provided_value.encode('utf-8'))
     
     def _encrypt_value(self, value: str) -> str:
         """Encrypt secret value using AES-GCM authenticated encryption."""
