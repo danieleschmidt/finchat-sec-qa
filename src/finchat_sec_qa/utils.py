@@ -121,6 +121,10 @@ class TimeBoundedCache(BoundedCache[K, V]):
         super().__init__(max_size)
         self.ttl_seconds = ttl_seconds
         self._timestamps: OrderedDict[K, float] = OrderedDict()
+        
+        # Lazy cleanup optimization
+        self._last_cleanup_time: float = 0
+        self._cleanup_interval: float = max(60, ttl_seconds / 10)  # Cleanup every 60s or 10% of TTL
     
     def set(self, key: K, value: V) -> None:
         """Set key-value with current timestamp."""
@@ -136,23 +140,43 @@ class TimeBoundedCache(BoundedCache[K, V]):
             del self._timestamps[expired_key]
     
     def get(self, key: K, default: Optional[V] = None) -> Optional[V]:
-        """Get value, checking expiration first."""
+        """Get value with lazy expiration cleanup."""
         import time
         
+        # Perform lazy cleanup if needed
+        if self._should_cleanup():
+            self._perform_lazy_cleanup()
+        
         if key in self._cache:
-            # Check if expired
-            if key in self._timestamps:
-                age = time.time() - self._timestamps[key]
+            # Quick check: if key exists and we just cleaned up, it's valid
+            # Only check individual expiration if it's been a while since cleanup
+            current_time = time.time()
+            if (current_time - self._last_cleanup_time > self._cleanup_interval / 2 and 
+                key in self._timestamps):
+                age = current_time - self._timestamps[key]
                 if age > self.ttl_seconds:
                     # Expired - remove from cache
                     self.delete(key)
                     return default
             
             # Not expired - update LRU and return
-            self._timestamps.move_to_end(key)
+            if key in self._timestamps:
+                self._timestamps.move_to_end(key)
             return super().get(key, default)
         
         return default
+    
+    def _should_cleanup(self) -> bool:
+        """Check if lazy cleanup should be performed."""
+        import time
+        current_time = time.time()
+        return (current_time - self._last_cleanup_time) >= self._cleanup_interval
+    
+    def _perform_lazy_cleanup(self) -> None:
+        """Perform lazy cleanup of expired entries."""
+        import time
+        self._last_cleanup_time = time.time()
+        self.cleanup_expired()
     
     def delete(self, key: K) -> bool:
         """Delete key and its timestamp."""

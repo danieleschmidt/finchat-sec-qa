@@ -28,10 +28,35 @@ class FilingMetadata:
     document_url: str
 
 
-class EdgarClient:
-    """Simple client for fetching filings from the SEC EDGAR system."""
-
+class BaseEdgarClient:
+    """Base class containing common functionality for Edgar clients."""
+    
     BASE_URL = "https://data.sec.gov"
+    
+    def _validate_user_agent(self, user_agent: str) -> None:
+        """Validate user agent string."""
+        if not user_agent:
+            raise ValueError("user_agent must be provided for SEC requests")
+    
+    def _setup_cache_dir(self, cache_dir: Path | None) -> Path:
+        """Setup cache directory with default fallback."""
+        return Path(cache_dir or Path.home() / ".cache" / "finchat_sec_qa")
+    
+    def _validate_ticker(self, ticker: str) -> str:
+        """Validate and sanitize ticker symbol."""
+        return validate_ticker(ticker)
+
+    def _validate_cik(self, cik: str) -> str:
+        """Validate and sanitize CIK identifier."""
+        return validate_cik(cik)
+
+    def _validate_accession_number(self, accession: str) -> str:
+        """Validate and sanitize accession number."""
+        return validate_accession_number(accession)
+
+
+class EdgarClient(BaseEdgarClient):
+    """Simple client for fetching filings from the SEC EDGAR system."""
 
     def __init__(
         self,
@@ -42,10 +67,9 @@ class EdgarClient:
         retries: int = 3,
         cache_dir: Path | None = None,
     ) -> None:
-        if not user_agent:
-            raise ValueError("user_agent must be provided for SEC requests")
+        self._validate_user_agent(user_agent)
         self.timeout = timeout
-        self.cache_dir = Path(cache_dir or Path.home() / ".cache" / "finchat_sec_qa")
+        self.cache_dir = self._setup_cache_dir(cache_dir)
         self.session = session or requests.Session()
         self._ticker_cache: Optional[Dict[str, str]] = None
         retry_strategy = Retry(
@@ -64,18 +88,6 @@ class EdgarClient:
         response = self.session.get(url, timeout=self.timeout)
         response.raise_for_status()
         return response
-
-    def _validate_ticker(self, ticker: str) -> str:
-        """Validate and sanitize ticker symbol."""
-        return validate_ticker(ticker)
-    
-    def _validate_cik(self, cik: str) -> str:
-        """Validate and sanitize CIK."""
-        return validate_cik(cik)
-    
-    def _validate_accession_number(self, accession: str) -> str:
-        """Validate and sanitize accession number."""
-        return validate_accession_number(accession)
 
     def _load_ticker_cache(self) -> Dict[str, str]:
         """Load and cache ticker-to-CIK mapping for efficient lookups."""
@@ -181,10 +193,8 @@ class EdgarClient:
         return filename
 
 
-class AsyncEdgarClient:
+class AsyncEdgarClient(BaseEdgarClient):
     """Async version of EdgarClient for improved performance with concurrent requests."""
-
-    BASE_URL = "https://data.sec.gov"
 
     def __init__(
         self,
@@ -195,10 +205,9 @@ class AsyncEdgarClient:
         retries: int = 3,
         cache_dir: Path | None = None,
     ) -> None:
-        if not user_agent:
-            raise ValueError("user_agent must be provided for SEC requests")
+        self._validate_user_agent(user_agent)
         self.timeout = timeout
-        self.cache_dir = Path(cache_dir or Path.home() / ".cache" / "finchat_sec_qa")
+        self.cache_dir = self._setup_cache_dir(cache_dir)
         
         # Create async session with retry configuration
         if session is None:
@@ -232,18 +241,6 @@ class AsyncEdgarClient:
         response = await self.session.get(url, timeout=self.timeout)
         response.raise_for_status()
         return response
-
-    def _validate_ticker(self, ticker: str) -> str:
-        """Validate and sanitize ticker symbol."""
-        return validate_ticker(ticker)
-    
-    def _validate_cik(self, cik: str) -> str:
-        """Validate and sanitize CIK."""
-        return validate_cik(cik)
-    
-    def _validate_accession_number(self, accession: str) -> str:
-        """Validate and sanitize accession number."""
-        return validate_accession_number(accession)
 
     async def _load_ticker_cache(self) -> Dict[str, str]:
         """Load and cache ticker-to-CIK mapping for efficient lookups."""

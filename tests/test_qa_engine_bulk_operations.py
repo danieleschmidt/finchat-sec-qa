@@ -115,3 +115,75 @@ def test_add_documents_method_convenience():
     assert engine.chunks[0].doc_id == "doc1"
     assert engine.chunks[1].doc_id == "doc2"
     assert engine.chunks[2].doc_id == "doc3"
+
+
+def test_add_documents_validation_empty_doc_id():
+    """Test that bulk operations validate empty document IDs."""
+    engine = FinancialQAEngine()
+    
+    documents = [
+        ("", "valid document text"),
+        ("doc2", "second document text")
+    ]
+    
+    with pytest.raises(ValueError, match="doc_id cannot be empty"):
+        engine.add_documents(documents)
+
+
+def test_add_documents_validation_empty_text():
+    """Test that bulk operations validate empty document text."""
+    engine = FinancialQAEngine()
+    
+    documents = [
+        ("doc1", ""),
+        ("doc2", "second document text")
+    ]
+    
+    with pytest.raises(ValueError, match="text cannot be empty"):
+        engine.add_documents(documents)
+
+
+def test_add_documents_validation_invalid_types():
+    """Test that bulk operations validate document types."""
+    engine = FinancialQAEngine()
+    
+    # Test non-string doc_id
+    documents = [(123, "valid document text")]
+    with pytest.raises(ValueError, match="doc_id must be a non-empty string"):
+        engine.add_documents(documents)
+    
+    # Test non-string text
+    documents = [("doc1", 123)]
+    with pytest.raises(ValueError, match="text must be a non-empty string"):
+        engine.add_documents(documents)
+
+
+def test_add_documents_validation_dangerous_content():
+    """Test that bulk operations validate against dangerous content."""
+    engine = FinancialQAEngine()
+    
+    documents = [
+        ("doc1", "This contains <script>alert('xss')</script> dangerous content"),
+        ("doc2", "second document text")
+    ]
+    
+    with pytest.raises(ValueError, match="text contains potentially dangerous content"):
+        engine.add_documents(documents)
+
+
+def test_add_documents_validation_partial_failure_cleanup():
+    """Test that bulk operations handle partial validation failures correctly."""
+    engine = FinancialQAEngine()
+    
+    documents = [
+        ("doc1", "valid first document"),
+        ("", "invalid empty doc_id"),  # This should cause failure
+        ("doc3", "valid third document")
+    ]
+    
+    # Should fail and not add any documents
+    with pytest.raises(ValueError):
+        engine.add_documents(documents)
+    
+    # No documents should be added due to validation failure
+    assert len(engine.chunks) == 0
