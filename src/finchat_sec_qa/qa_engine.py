@@ -15,6 +15,7 @@ from joblib import dump, load
 import re
 
 from .config import get_config
+from .validation import validate_text_safety
 
 
 @dataclass
@@ -134,10 +135,53 @@ class FinancialQAEngine:
             self._rebuild_index()
 
     def add_documents(self, documents: List[Tuple[str, str]]) -> None:
-        """Add multiple documents efficiently using bulk operations."""
+        """Add multiple documents efficiently using bulk operations.
+        
+        Validates all documents before processing to ensure data integrity.
+        If any document fails validation, no documents are added.
+        
+        Args:
+            documents: List of (doc_id, text) tuples to add
+            
+        Raises:
+            ValueError: If any document has invalid doc_id or text
+        """
+        # Validate all documents before processing any
+        for doc_id, text in documents:
+            self._validate_document(doc_id, text)
+        
+        # All documents validated, now process them
         with self.bulk_operation():
             for doc_id, text in documents:
                 self.add_document(doc_id, text)
+    
+    def _validate_document(self, doc_id: str, text: str) -> None:
+        """Validate a single document's doc_id and text.
+        
+        Args:
+            doc_id: Document identifier to validate
+            text: Document text to validate
+            
+        Raises:
+            ValueError: If doc_id or text is invalid
+        """
+        self._validate_doc_id(doc_id)
+        validate_text_safety(text, "text")
+    
+    def _validate_doc_id(self, doc_id: str) -> None:
+        """Validate document ID format and content.
+        
+        Args:
+            doc_id: Document identifier to validate
+            
+        Raises:
+            ValueError: If doc_id is invalid
+        """
+        if not isinstance(doc_id, str):
+            raise ValueError('doc_id must be a non-empty string')
+        
+        if not doc_id or not doc_id.strip():
+            raise ValueError('doc_id cannot be empty')
 
     @contextmanager
     def bulk_operation(self):
