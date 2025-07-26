@@ -64,54 +64,89 @@ class FinancialQAEngine:
         Returns list of (chunk_text, start_pos, end_pos) tuples.
         Tries to split at sentence boundaries when possible.
         """
-        config = get_config()
-        
-        if len(text) <= config.CHUNK_SIZE:
-            # Document is small enough to be a single chunk
+        if self._is_single_chunk(text):
             return [(text, 0, len(text))]
         
+        return self._create_overlapping_chunks(text)
+    
+    def _is_single_chunk(self, text: str) -> bool:
+        """Check if text is small enough to be a single chunk."""
+        config = get_config()
+        return len(text) <= config.CHUNK_SIZE
+    
+    def _create_overlapping_chunks(self, text: str) -> List[Tuple[str, int, int]]:
+        """Create overlapping chunks from text, preferring sentence boundaries."""
+        config = get_config()
         chunks = []
         start = 0
         
         while start < len(text):
-            # Calculate end position for this chunk
-            end = start + config.CHUNK_SIZE
+            chunk = self._create_next_chunk(text, start)
+            chunks.append(chunk)
             
-            if end >= len(text):
-                # This is the final chunk
-                chunks.append((text[start:], start, len(text)))
+            # Move start position for next chunk with overlap
+            if chunk[2] >= len(text):  # end_pos >= text length (final chunk)
                 break
-            
-            # Try to find a good breaking point near the end of the chunk
-            # Look for sentence boundaries (. ! ?) followed by whitespace
-            search_start = max(start + config.CHUNK_SIZE - config.CHUNK_OVERLAP, start + config.CHUNK_SIZE // 2)
-            search_text = text[search_start:end + 100]  # Look a bit beyond the target end
-            
-            # Find sentence boundaries
-            sentence_pattern = r'[.!?]\s+'
-            matches = list(re.finditer(sentence_pattern, search_text))
-            
-            if matches:
-                # Use the last sentence boundary before or near our target end
-                best_match = None
-                for match in matches:
-                    abs_pos = search_start + match.end()
-                    if abs_pos <= end + 50:  # Allow some flexibility beyond target
-                        best_match = match
-                    else:
-                        break
-                
-                if best_match:
-                    chunk_end = search_start + best_match.end()
-                    chunks.append((text[start:chunk_end], start, chunk_end))
-                    start = chunk_end - config.CHUNK_OVERLAP
-                    continue
-            
-            # No good sentence boundary found, just split at the target position
-            chunks.append((text[start:end], start, end))
-            start = end - config.CHUNK_OVERLAP
+            start = chunk[2] - config.CHUNK_OVERLAP
         
         return chunks
+    
+    def _create_next_chunk(self, text: str, start: int) -> Tuple[str, int, int]:
+        """Create the next chunk starting at the given position."""
+        config = get_config()
+        end = start + config.CHUNK_SIZE
+        
+        if end >= len(text):
+            # Final chunk - include all remaining text
+            return self._create_chunk_at_position(text, start, len(text))
+        
+        # Try to find a sentence boundary for a clean break
+        boundary_end = self._find_sentence_boundary(text, start, end)
+        if boundary_end is not None:
+            return self._create_chunk_at_boundary(text, start, boundary_end)
+        
+        # No sentence boundary found, split at target position
+        return self._create_chunk_at_position(text, start, end)
+    
+    def _find_sentence_boundary(self, text: str, start: int, target_end: int) -> int | None:
+        """Find the best sentence boundary near the target end position."""
+        config = get_config()
+        
+        # Define search window for sentence boundaries
+        search_start = max(start + config.CHUNK_SIZE - config.CHUNK_OVERLAP, start + config.CHUNK_SIZE // 2)
+        search_end = min(target_end + 100, len(text))  # Look a bit beyond target
+        search_text = text[search_start:search_end]
+        
+        # Find sentence boundaries using regex
+        sentence_pattern = r'[.!?]\s+'
+        matches = list(re.finditer(sentence_pattern, search_text))
+        
+        if not matches:
+            return None
+        
+        # Find the best match within our flexibility range
+        flexibility = 50  # Allow some flexibility beyond target
+        best_match = None
+        
+        for match in matches:
+            abs_pos = search_start + match.end()
+            if abs_pos <= target_end + flexibility:
+                best_match = match
+            else:
+                break
+        
+        if best_match:
+            return search_start + best_match.end()
+        
+        return None
+    
+    def _create_chunk_at_boundary(self, text: str, start: int, end: int) -> Tuple[str, int, int]:
+        """Create a chunk ending at a sentence boundary."""
+        return (text[start:end], start, end)
+    
+    def _create_chunk_at_position(self, text: str, start: int, end: int) -> Tuple[str, int, int]:
+        """Create a chunk ending at a specific position."""
+        return (text[start:end], start, end)
 
     def add_document(self, doc_id: str, text: str) -> None:
         """Add a document to the index, splitting into chunks if necessary."""
