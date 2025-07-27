@@ -192,3 +192,84 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+
+# ============================================================================
+# FinChat-SEC-QA Specific
+# ============================================================================
+
+# Application cache and data
+.cache/
+filings/
+*.pkl
+*.joblib
+
+# Secrets and environment files
+.env.local
+.env.*.local
+secrets.yaml
+secrets.json
+
+# Application logs
+logs/
+*.log
+app.log
+
+# Generated documentation
+docs/site/
+docs/build/
+
+# Test artifacts
+.test_cache/
+test_results/
+screenshots/
+reports/
+
+# Performance and profiling
+*.prof
+profiling_results/
+benchmark_results/
+
+# Docker and Kubernetes
+.docker/
+k8s/secrets/
+*.kubeconfig
+
+# Monitoring and metrics
+metrics/
+monitoring/
+grafana/data/
+prometheus/data/
+
+# Temporary files
+temp/
+tmp/
+*.tmp
+*.temp
+
+# IDE and editor specifics
+.idea/
+*.swp
+*.swo
+*~
+
+# OS specific
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Security and compliance
+.secrets.baseline
+security_reports/
+compliance_reports/
+audit_logs/
+
+# CI/CD artifacts
+.github/secrets/
+deployment_artifacts/
+release_notes/
+SBOM.json
+
+# Development database
+dev.db
+test.db
+local.db
