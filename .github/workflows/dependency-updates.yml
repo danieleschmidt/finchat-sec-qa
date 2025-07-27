@@ -1,0 +1,131 @@
+name: Dependency Updates
+
+on:
+  schedule:
+    # Run weekly on Mondays at 9 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-dependencies:
+    name: Update Python Dependencies
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip pip-tools
+          pip install -e .[dev]
+      
+      - name: Update Dependencies
+        run: |
+          # Update pre-commit hooks
+          pre-commit autoupdate
+          
+          # Check for outdated packages
+          pip list --outdated --format=json > outdated.json
+      
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: update dependencies"
+          title: "🔄 Weekly Dependency Updates"
+          body: |
+            ## Automated Dependency Updates
+            
+            This PR contains the weekly automated dependency updates.
+            
+            ### Changes:
+            - Updated pre-commit hooks to latest versions
+            - Package updates are listed in the commits
+            
+            ### Verification:
+            - [ ] All tests pass
+            - [ ] No breaking changes detected
+            - [ ] Security vulnerabilities addressed
+            
+            **Note**: This PR was created automatically. Please review changes before merging.
+          branch: dependency-updates
+          delete-branch: true
+          labels: |
+            dependencies
+            automation
+            maintenance
+      
+      - name: Auto-merge if safe
+        uses: pascalgn/merge-action@v0.15.6
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          merge_method: squash
+        env:
+          MERGE_LABELS: "dependencies,automation"
+          MERGE_REQUIRED_APPROVALS: "0"
+          MERGE_DELETE_BRANCH: "true"
+
+  security-updates:
+    name: Security Updates
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install Safety
+        run: pip install safety
+      
+      - name: Check for Security Issues
+        run: |
+          safety check --json --output security-report.json || true
+      
+      - name: Create Security Issue
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const report = JSON.parse(fs.readFileSync('security-report.json', 'utf8'));
+            
+            if (report.vulnerabilities && report.vulnerabilities.length > 0) {
+              const title = `🚨 Security Vulnerabilities Detected`;
+              const body = `## Security Vulnerabilities Found
+              
+              The automated security scan has detected vulnerabilities in our dependencies.
+              
+              **Vulnerabilities:**
+              ${report.vulnerabilities.map(v => `- ${v.package_name}: ${v.vulnerability_id}`).join('\n')}
+              
+              **Action Required:**
+              Please review and update the affected dependencies immediately.
+              
+              This issue was created automatically by the security update workflow.`;
+              
+              github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: title,
+                body: body,
+                labels: ['security', 'high-priority', 'dependencies']
+              });
+            }

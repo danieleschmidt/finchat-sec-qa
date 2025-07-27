@@ -1,0 +1,107 @@
+{
+  "branches": [
+    "main",
+    {
+      "name": "develop",
+      "prerelease": "beta"
+    },
+    {
+      "name": "release/*",
+      "prerelease": "rc"
+    }
+  ],
+  "plugins": [
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/release-notes-generator",
+    [
+      "@semantic-release/changelog",
+      {
+        "changelogFile": "CHANGELOG.md"
+      }
+    ],
+    [
+      "@semantic-release/exec",
+      {
+        "prepareCmd": "python scripts/update_version.py ${nextRelease.version}",
+        "publishCmd": "python -m build && twine upload dist/*"
+      }
+    ],
+    [
+      "@semantic-release/git",
+      {
+        "assets": ["CHANGELOG.md", "pyproject.toml", "src/finchat_sec_qa/__init__.py"],
+        "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+      }
+    ],
+    [
+      "@semantic-release/github",
+      {
+        "assets": [
+          {
+            "path": "dist/*.tar.gz",
+            "label": "Python source distribution"
+          },
+          {
+            "path": "dist/*.whl",
+            "label": "Python wheel"
+          }
+        ]
+      }
+    ]
+  ],
+  "preset": "conventionalcommits",
+  "presetConfig": {
+    "types": [
+      {
+        "type": "feat",
+        "section": "Features"
+      },
+      {
+        "type": "fix",
+        "section": "Bug Fixes"
+      },
+      {
+        "type": "perf",
+        "section": "Performance Improvements"
+      },
+      {
+        "type": "revert",
+        "section": "Reverts"
+      },
+      {
+        "type": "docs",
+        "section": "Documentation"
+      },
+      {
+        "type": "style",
+        "section": "Styles",
+        "hidden": false
+      },
+      {
+        "type": "chore",
+        "section": "Maintenance",
+        "hidden": false
+      },
+      {
+        "type": "refactor",
+        "section": "Code Refactoring"
+      },
+      {
+        "type": "test",
+        "section": "Tests"
+      },
+      {
+        "type": "build",
+        "section": "Build System"
+      },
+      {
+        "type": "ci",
+        "section": "Continuous Integration"
+      },
+      {
+        "type": "security",
+        "section": "Security"
+      }
+    ]
+  }
+}

@@ -1,0 +1,445 @@
+name: Comprehensive CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run nightly builds at 2 AM UTC
+    - cron: '0 2 * * *'
+
+env:
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '18'
+
+jobs:
+  # ============================================================================
+  # CODE QUALITY & SECURITY
+  # ============================================================================
+  
+  code-quality:
+    name: Code Quality & Security
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for better analysis
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -e .[dev,security,testing]
+      
+      - name: Code Formatting (Ruff)
+        run: |
+          ruff format --check src tests
+          ruff check src tests
+      
+      - name: Type Checking (MyPy)
+        run: mypy src/
+      
+      - name: Security Scan (Bandit)
+        run: bandit -r src/ -c pyproject.toml
+      
+      - name: Dependency Security (Safety)
+        run: safety check --json
+        continue-on-error: true
+      
+      - name: Secrets Detection
+        uses: Yelp/detect-secrets-action@v1.4.0
+        with:
+          args: '--baseline .secrets.baseline'
+      
+      - name: SAST Analysis (Semgrep)
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: auto
+        env:
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+        continue-on-error: true
+
+  # ============================================================================
+  # TESTING MATRIX
+  # ============================================================================
+  
+  test-matrix:
+    name: Test Suite
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ['3.9', '3.10', '3.11', '3.12']
+        exclude:
+          # Reduce matrix size - test fewer combinations on non-Linux
+          - os: windows-latest
+            python-version: '3.9'
+          - os: windows-latest
+            python-version: '3.10'
+          - os: macos-latest
+            python-version: '3.9'
+          - os: macos-latest
+            python-version: '3.10'
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+      
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -e .[testing,performance]
+      
+      - name: Unit Tests
+        run: |
+          pytest tests/unit/ -v \
+            --cov=src \
+            --cov-report=xml \
+            --cov-report=term \
+            --cov-fail-under=80 \
+            --junit-xml=test-results-unit.xml
+      
+      - name: Integration Tests
+        run: |
+          pytest tests/integration/ -v \
+            --junit-xml=test-results-integration.xml
+        env:
+          TEST_TIMEOUT: 60
+      
+      - name: Performance Tests
+        run: |
+          pytest tests/performance/ -v \
+            --benchmark-only \
+            --benchmark-json=benchmark-results.json
+        continue-on-error: true
+      
+      - name: Upload Coverage to Codecov
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+      
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: test-results-${{ matrix.os }}-${{ matrix.python-version }}
+          path: |
+            test-results-*.xml
+            benchmark-results.json
+            coverage.xml
+
+  # ============================================================================
+  # END-TO-END TESTING
+  # ============================================================================
+  
+  e2e-tests:
+    name: End-to-End Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [code-quality]
+    
+    services:
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[testing,performance]
+      
+      - name: Build Docker Images
+        run: |
+          docker build -f docker/Dockerfile.api -t finchat-api:test .
+          docker build -f docker/Dockerfile.webapp -t finchat-webapp:test .
+      
+      - name: Start Services
+        run: |
+          docker-compose -f docker-compose.yml up -d
+          sleep 10  # Wait for services to start
+      
+      - name: Health Check
+        run: |
+          curl -f http://localhost:8000/health || exit 1
+          curl -f http://localhost:5000/health || exit 1
+      
+      - name: Run E2E Tests
+        run: |
+          pytest tests/e2e/ -v \
+            --junit-xml=test-results-e2e.xml
+        env:
+          API_BASE_URL: http://localhost:8000
+          WEBAPP_BASE_URL: http://localhost:5000
+      
+      - name: Collect Docker Logs
+        if: failure()
+        run: |
+          docker-compose logs > docker-logs.txt
+      
+      - name: Upload E2E Results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: e2e-test-results
+          path: |
+            test-results-e2e.xml
+            docker-logs.txt
+
+  # ============================================================================
+  # SECURITY SCANNING
+  # ============================================================================
+  
+  security-scan:
+    name: Security Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [code-quality]
+    
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[security]
+      
+      - name: Run CodeQL Analysis
+        uses: github/codeql-action/init@v2
+        with:
+          languages: python
+      
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v2
+      
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+      
+      - name: Container Security Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'python:3.11-slim'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+      
+      - name: Upload Trivy Scan Results
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # ============================================================================
+  # BUILD & PACKAGE
+  # ============================================================================
+  
+  build-and-package:
+    name: Build & Package
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [test-matrix, e2e-tests]
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install Build Dependencies
+        run: |
+          python -m pip install --upgrade pip build twine
+      
+      - name: Build Package
+        run: python -m build
+      
+      - name: Check Package
+        run: twine check dist/*
+      
+      - name: Build Docker Images
+        run: |
+          docker build -f docker/Dockerfile.api -t finchat-api:${{ github.sha }} .
+          docker build -f docker/Dockerfile.webapp -t finchat-webapp:${{ github.sha }} .
+      
+      - name: Test Docker Images
+        run: |
+          docker run --rm -d --name test-api -p 8000:8000 finchat-api:${{ github.sha }}
+          sleep 5
+          curl -f http://localhost:8000/health || exit 1
+          docker stop test-api
+      
+      - name: Generate SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          path: ./
+          format: cyclonedx-json
+      
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-artifacts
+          path: |
+            dist/
+            *.sbom.json
+      
+      - name: Save Docker Images
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          docker save finchat-api:${{ github.sha }} | gzip > finchat-api.tar.gz
+          docker save finchat-webapp:${{ github.sha }} | gzip > finchat-webapp.tar.gz
+      
+      - name: Upload Docker Images
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v3
+        with:
+          name: docker-images
+          path: |
+            finchat-api.tar.gz
+            finchat-webapp.tar.gz
+
+  # ============================================================================
+  # PERFORMANCE BENCHMARKING
+  # ============================================================================
+  
+  performance-benchmark:
+    name: Performance Benchmark
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [build-and-package]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[performance,testing]
+      
+      - name: Run Performance Benchmarks
+        run: |
+          python scripts/benchmark.py --output benchmark-report.json
+      
+      - name: Performance Regression Check
+        run: |
+          python scripts/check_performance_regression.py benchmark-report.json
+        continue-on-error: true
+      
+      - name: Upload Benchmark Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: performance-benchmarks
+          path: benchmark-report.json
+
+  # ============================================================================
+  # DEPLOYMENT TO STAGING
+  # ============================================================================
+  
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [build-and-package, security-scan]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    environment: staging
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: docker-images
+      
+      - name: Load Docker Images
+        run: |
+          docker load < finchat-api.tar.gz
+          docker load < finchat-webapp.tar.gz
+      
+      - name: Deploy to Staging
+        run: |
+          echo "Deploying to staging environment..."
+          # Add actual deployment commands here
+      
+      - name: Run Smoke Tests
+        run: |
+          echo "Running smoke tests against staging..."
+          # Add smoke test commands here
+
+  # ============================================================================
+  # NOTIFICATION & REPORTING
+  # ============================================================================
+  
+  notify-results:
+    name: Notify Results
+    runs-on: ubuntu-latest
+    needs: [test-matrix, e2e-tests, security-scan, build-and-package]
+    if: always()
+    
+    steps:
+      - name: Notify Slack on Failure
+        if: failure()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          channel: '#ci-cd'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+      
+      - name: Update Status Badge
+        if: github.ref == 'refs/heads/main'
+        run: |
+          echo "Updating repository status badges..."
+          # Add badge update logic here
