@@ -1,0 +1,147 @@
+# Semantic Release Configuration for FinChat-SEC-QA
+# Automates version management and release generation
+
+branches:
+  - main
+  - name: develop
+    prerelease: beta
+  - name: 'release/*'
+    prerelease: rc
+
+tagFormat: 'v${version}'
+
+plugins:
+  # Analyze commits to determine release type
+  - '@semantic-release/commit-analyzer':
+      preset: 'conventionalcommits'
+      releaseRules:
+        - type: 'feat'
+          release: 'minor'
+        - type: 'fix'
+          release: 'patch'
+        - type: 'docs'
+          release: 'patch'
+        - type: 'style'
+          release: false
+        - type: 'refactor'
+          release: 'patch'
+        - type: 'perf'
+          release: 'patch'
+        - type: 'test'
+          release: false
+        - type: 'build'
+          release: 'patch'
+        - type: 'ci'
+          release: false
+        - type: 'chore'
+          release: false
+        - type: 'revert'
+          release: 'patch'
+        - breaking: true
+          release: 'major'
+      parserOpts:
+        noteKeywords:
+          - 'BREAKING CHANGE'
+          - 'BREAKING CHANGES'
+          - 'BREAKING'
+
+  # Generate release notes
+  - '@semantic-release/release-notes-generator':
+      preset: 'conventionalcommits'
+      presetConfig:
+        types:
+          - type: 'feat'
+            section: '🚀 Features'
+          - type: 'fix'
+            section: '🐛 Bug Fixes'
+          - type: 'docs'
+            section: '📚 Documentation'
+          - type: 'style'
+            section: '💄 Styling'
+            hidden: true
+          - type: 'refactor'
+            section: '♻️ Code Refactoring'
+          - type: 'perf'
+            section: '⚡ Performance Improvements'
+          - type: 'test'
+            section: '✅ Tests'
+            hidden: true
+          - type: 'build'
+            section: '👷 Build System'
+          - type: 'ci'
+            section: '🔧 Continuous Integration'
+            hidden: true
+          - type: 'chore'
+            section: '🔧 Chores'
+            hidden: true
+          - type: 'revert'
+            section: '⏪ Reverts'
+      writerOpts:
+        groupBy: 'type'
+        commitGroupsSort: 'title'
+        commitsSort: 'header'
+
+  # Update version in files
+  - '@semantic-release/exec':
+      prepareCmd: |
+        # Update version in pyproject.toml
+        sed -i 's/version = ".*"/version = "${nextRelease.version}"/' pyproject.toml
+        
+        # Update version in __init__.py
+        sed -i 's/__version__ = ".*"/__version__ = "${nextRelease.version}"/' src/finchat_sec_qa/__init__.py
+        
+        # Update project metrics
+        python scripts/update_version.py ${nextRelease.version}
+      publishCmd: |
+        echo "Version ${nextRelease.version} published successfully"
+
+  # Update CHANGELOG.md
+  - '@semantic-release/changelog':
+      changelogFile: 'CHANGELOG.md'
+      changelogTitle: '# FinChat-SEC-QA Changelog\n\nAll notable changes to this project will be documented in this file.\n\nThe format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),\nand this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).'
+
+  # Create GitHub release
+  - '@semantic-release/github':
+      assets:
+        - path: 'dist/*.tar.gz'
+          label: 'Source Distribution'
+        - path: 'dist/*.whl'
+          label: 'Python Wheel'
+        - path: 'SBOM.json'
+          label: 'Software Bill of Materials'
+      successComment: |
+        :tada: This ${issue.pull_request ? 'PR is included' : 'issue has been resolved'} in version [${nextRelease.version}](${releases.filter(release => /^v\d/.test(release.name))[0].url}) :tada:
+        
+        The release is available on:
+        - [GitHub Releases](${releases.filter(release => /^v\d/.test(release.name))[0].url})
+        - [PyPI](https://pypi.org/project/finchat-sec-qa/${nextRelease.version}/)
+      releasedLabels:
+        - 'released'
+      addReleases: 'bottom'
+
+  # Commit updated files
+  - '@semantic-release/git':
+      assets:
+        - 'pyproject.toml'
+        - 'src/finchat_sec_qa/__init__.py'
+        - 'CHANGELOG.md'
+        - '.github/project-metrics.json'
+      message: |
+        chore(release): ${nextRelease.version} [skip ci]
+        
+        ${nextRelease.notes}
+        
+        🤖 Generated with [semantic-release](https://github.com/semantic-release/semantic-release)
+
+# Environment variables required:
+# - GITHUB_TOKEN: GitHub personal access token
+# - PYPI_TOKEN: PyPI API token (if publishing to PyPI)
+
+# CI/CD Integration:
+# Run with: npx semantic-release
+# Or in GitHub Actions:
+# - name: Semantic Release
+#   run: npx semantic-release
+#   env:
+#     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#     PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
