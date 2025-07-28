@@ -258,7 +258,7 @@ Thumbs.db
 Desktop.ini
 
 # Security and compliance
-.secrets.baseline
+# .secrets.baseline - Keep this file in version control for baseline
 security_reports/
 compliance_reports/
 audit_logs/
