@@ -1,0 +1,69 @@
+name: 🔒 Security Vulnerability Report
+description: Report a security vulnerability privately
+title: "[SECURITY]: "
+labels: ["security", "bug", "triage"]
+assignees:
+  - security-team
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ⚠️ **IMPORTANT**: Do not create public issues for security vulnerabilities!
+        
+        This template is for reporting security issues that don't require immediate private disclosure.
+        For critical vulnerabilities, please email security@terragon.ai directly.
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity Level
+      description: How severe is this security issue?
+      options:
+        - Low (Information disclosure with minimal impact)
+        - Medium (Limited access or data exposure)
+        - High (Significant data exposure or system compromise)
+        - Critical (Full system compromise or data breach)
+    validations:
+      required: true
+
+  - type: textarea
+    id: vulnerability
+    attributes:
+      label: Vulnerability Description
+      description: Describe the security vulnerability
+      placeholder: Detailed description of the security issue...
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Potential Impact
+      description: What could an attacker achieve?
+      placeholder: Describe the potential impact if exploited...
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: How to reproduce this vulnerability
+      placeholder: |
+        1. Go to...
+        2. Do...
+        3. Observe...
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Security Checklist
+      options:
+        - label: I have not disclosed this vulnerability publicly
+          required: true
+        - label: I have checked this is not a duplicate report
+          required: true
+        - label: I have provided sufficient detail for investigation
+          required: true
