@@ -1,1 +1,31 @@
+# CODEOWNERS for FinChat-SEC-QA
+# This file defines who should be requested for reviews on PRs
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Global ownership - all files
 * @finchat-team
+
+# Core source code
+/src/ @finchat-team
+
+# Security-critical components
+/src/finchat_sec_qa/secrets_manager.py @finchat-team
+/src/finchat_sec_qa/file_security.py @finchat-team
+/src/finchat_sec_qa/validation.py @finchat-team
+
+# Infrastructure and deployment
+/docker/ @finchat-team
+/scripts/ @finchat-team
+docker-compose*.yml @finchat-team
+
+# CI/CD and workflows
+/.github/workflows/ @finchat-team
+
+# Configuration files
+pyproject.toml @finchat-team
+.pre-commit-config.yaml @finchat-team
+Makefile @finchat-team
+
+# Security policies and compliance
+SECURITY.md @finchat-team
+.secrets.baseline @finchat-team
