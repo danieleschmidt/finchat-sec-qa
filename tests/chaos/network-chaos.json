@@ -1,0 +1,65 @@
+{
+  "version": "1.0.0",
+  "title": "Network Chaos Experiment",
+  "description": "Test system resilience to network disruptions",
+  "configuration": {
+    "duration": "${duration}",
+    "intensity": "${intensity}"
+  },
+  "steady-state-hypothesis": {
+    "title": "API is healthy",
+    "probes": [
+      {
+        "name": "api-health-check",
+        "type": "probe",
+        "provider": {
+          "type": "http",
+          "url": "http://localhost:8000/health",
+          "method": "GET",
+          "timeout": 10
+        },
+        "tolerance": {
+          "type": "status",
+          "status": 200
+        }
+      }
+    ]
+  },
+  "method": [
+    {
+      "name": "introduce-network-latency",
+      "type": "action",
+      "provider": {
+        "type": "process",
+        "path": "tc",
+        "arguments": ["qdisc", "add", "dev", "lo", "root", "netem", "delay", "500ms"]
+      },
+      "pauses": {
+        "after": 30
+      }
+    },
+    {
+      "name": "simulate-packet-loss",
+      "type": "action", 
+      "provider": {
+        "type": "process",
+        "path": "tc",
+        "arguments": ["qdisc", "change", "dev", "lo", "root", "netem", "delay", "500ms", "loss", "10%"]
+      },
+      "pauses": {
+        "after": 60
+      }
+    }
+  ],
+  "rollbacks": [
+    {
+      "name": "remove-network-impairment",
+      "type": "action",
+      "provider": {
+        "type": "process",
+        "path": "tc",
+        "arguments": ["qdisc", "del", "dev", "lo", "root"]
+      }
+    }
+  ]
+}
