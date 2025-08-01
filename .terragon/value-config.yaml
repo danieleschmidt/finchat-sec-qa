@@ -1,0 +1,108 @@
+# Terragon Perpetual Value Discovery Configuration
+# Advanced Repository (92% SDLC Maturity) Configuration
+
+scoring:
+  weights:
+    # Weights optimized for advanced repository with high technical debt focus
+    advanced:
+      wsjf: 0.5              # Weighted Shortest Job First priority
+      ice: 0.1               # Impact × Confidence × Ease (reduced for advanced repos)
+      technicalDebt: 0.3     # High focus on technical debt reduction
+      security: 0.1          # Security boost factor
+      
+  # Scoring thresholds for work item selection
+  thresholds:
+    minScore: 15             # Minimum composite score for execution
+    maxRisk: 0.8            # Maximum acceptable risk level
+    securityBoost: 2.0      # Multiplier for security-related items
+    complianceBoost: 1.8    # Multiplier for compliance items
+    performanceBoost: 1.5   # Multiplier for performance improvements
+
+# Continuous discovery configuration
+discovery:
+  sources:
+    - gitHistory            # Scan commit messages for patterns
+    - staticAnalysis        # Code quality metrics and issues
+    - issueTrackers        # GitHub issues and PRs
+    - vulnerabilityDatabases # CVE and security advisories
+    - performanceMonitoring # Runtime performance data
+    - dependencyUpdates    # Package update availability
+
+  # Static analysis tools configuration
+  tools:
+    staticAnalysis:
+      - ruff                # Primary linting (already configured)
+      - mypy                # Type checking (already configured)
+      - bandit              # Security analysis (already configured)
+      - complexity          # Cyclomatic complexity analysis
+      
+    security:
+      - bandit              # Security linting
+      - dependabot          # Dependency updates (already configured)
+      - vulnerability-scan   # CVE database checks
+      
+    performance:
+      - pytest-benchmark    # Performance regression testing
+      - memory-profiler     # Memory usage analysis
+      - load-testing        # K6 performance tests (already configured)
+
+# Autonomous execution configuration
+execution:
+  maxConcurrentTasks: 1     # Single-threaded execution for safety
+  
+  # Quality gates for autonomous changes
+  testRequirements:
+    minCoverage: 80         # Minimum test coverage threshold
+    performanceRegression: 5 # Maximum % performance regression allowed
+    
+  # Automatic rollback triggers
+  rollbackTriggers:
+    - testFailure           # Any test failures
+    - buildFailure          # Build/lint failures
+    - securityViolation     # Security scan failures
+    - coverageDecrease      # Test coverage reduction
+
+# Signal collection patterns
+signalPatterns:
+  todoMarkers:
+    - "TODO"
+    - "FIXME" 
+    - "HACK"
+    - "XXX"
+    - "DEPRECATED"
+    - "TEMPORARY"
+    
+  commitPatterns:
+    quickFix: ["quick fix", "hotfix", "temporary", "hack"]
+    debt: ["debt", "refactor", "cleanup", "optimize"]
+    security: ["security", "vulnerability", "CVE", "patch"]
+    
+  complexityThresholds:
+    cyclomaticComplexity: 10
+    cognitiveComplexity: 15
+    maintainabilityIndex: 20
+
+# Learning and adaptation
+learning:
+  # Estimation accuracy tracking
+  accuracyTracking:
+    enabled: true
+    windowSize: 20          # Number of completed items to analyze
+    
+  # Model adjustment parameters
+  adaptation:
+    confidenceThreshold: 0.7 # Minimum confidence for predictions
+    adjustmentFactor: 0.1   # Learning rate for model updates
+    
+# Reporting and metrics
+reporting:
+  metrics:
+    - velocityTrend         # Items completed over time
+    - valueDelivered        # Estimated business value delivered
+    - technicalDebtReduction # Debt reduction percentage
+    - securityPosture       # Security improvements
+    - performanceGains      # Performance improvement percentage
+    
+  updateFrequency:
+    continuous: true        # Real-time metric updates
+    summaryInterval: "weekly" # Weekly summary reports
