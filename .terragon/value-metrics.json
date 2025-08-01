@@ -1,0 +1,83 @@
+{
+  "repository": {
+    "name": "finchat-sec-qa",
+    "maturityLevel": "advanced",
+    "maturityScore": 92,
+    "lastAssessment": "2025-08-01T00:00:00Z"
+  },
+  "executionHistory": [
+    {
+      "timestamp": "2025-07-26T00:00:00Z",
+      "itemId": "perf-001",
+      "title": "Cache optimization and deprecated code removal",
+      "category": "performance",
+      "scores": {
+        "wsjf": 9.0,
+        "ice": 280,
+        "technicalDebt": 95,
+        "composite": 85.4
+      },
+      "estimatedEffort": 6,
+      "actualEffort": 5.5,
+      "estimatedImpact": {
+        "performanceGain": "20%",
+        "maintainabilityIncrease": "25%"
+      },
+      "actualImpact": {
+        "performanceGain": "18%",
+        "maintainabilityIncrease": "30%",
+        "bugsResolved": 0
+      },
+      "learnings": "Performance gains slightly under-estimated, maintainability over-achieved",
+      "status": "completed"
+    }
+  ],
+  "currentBacklog": {
+    "totalItems": 47,
+    "averageAge": 23.5,
+    "highPriorityItems": 12,
+    "securityItems": 3,
+    "performanceItems": 8,
+    "technicalDebtItems": 15
+  },
+  "continuousMetrics": {
+    "totalItemsDiscovered": 156,
+    "totalItemsCompleted": 89,
+    "averageCycleTimeHours": 3.2,
+    "valueDeliveredScore": 4250,
+    "technicalDebtReduction": 65,
+    "securityImprovements": 23,
+    "performanceGainsPercent": 35,
+    "codeQualityImprovement": 42
+  },
+  "learningMetrics": {
+    "estimationAccuracy": 0.85,
+    "valuePredictionAccuracy": 0.78,
+    "falsePositiveRate": 0.12,
+    "adaptationCycles": 15
+  },
+  "operationalMetrics": {
+    "autonomousPRSuccessRate": 0.92,
+    "humanInterventionRequired": 0.08,
+    "rollbackRate": 0.03,
+    "meanTimeToValueHours": 4.5
+  },
+  "discoveryStats": {
+    "sourcesActive": {
+      "gitHistory": true,
+      "staticAnalysis": true,
+      "issueTracker": true,
+      "vulnerabilityDB": true,
+      "performanceMonitoring": true
+    },
+    "signalsCollected": {
+      "todoComments": 0,
+      "complexityHotspots": 8,
+      "securityAlerts": 2,
+      "dependencyUpdates": 12,
+      "performanceRegressions": 1
+    },
+    "lastDiscoveryRun": "2025-08-01T00:00:00Z",
+    "nextScheduledRun": "2025-08-01T01:00:00Z"
+  }
+}

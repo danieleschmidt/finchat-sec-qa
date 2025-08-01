@@ -4,6 +4,7 @@
 .PHONY: help install install-dev clean test test-unit test-integration test-security test-performance
 .PHONY: lint format type-check security-scan coverage build docker-build docker-run
 .PHONY: serve serve-dev docs deploy release pre-commit-install pre-commit-run
+.PHONY: terragon-discovery terragon-continuous terragon-report terragon-setup terragon-full-cycle terragon-backlog
 
 # Default target
 help: ## Show this help message
@@ -185,3 +186,30 @@ health-check: ## Check application health
 vscode-setup: ## Setup VSCode workspace
 	@echo "VSCode settings already configured in .vscode/"
 	@echo "Install recommended extensions for the best experience"
+
+# Terragon Autonomous SDLC Enhancement targets
+terragon-discovery: ## Run Terragon value discovery
+	@echo "🔍 Running Terragon autonomous value discovery..."
+	./.terragon/autonomous-execution.sh discovery
+
+terragon-continuous: ## Run continuous discovery cycles
+	@echo "🔄 Running continuous Terragon discovery..."
+	./.terragon/autonomous-execution.sh continuous 3
+
+terragon-report: ## Generate Terragon execution report
+	@echo "📊 Generating Terragon execution report..."
+	./.terragon/autonomous-execution.sh report
+
+terragon-setup: ## Setup Terragon scheduled execution
+	@echo "⏰ Setting up Terragon scheduled execution..."
+	./.terragon/autonomous-execution.sh setup-cron
+	@echo "Review .terragon/cron-setup.txt for scheduling options"
+
+terragon-full-cycle: ## Run complete Terragon cycle (discovery + execution + learning)
+	@echo "🚀 Running complete Terragon SDLC enhancement cycle..."
+	./.terragon/autonomous-execution.sh full-cycle
+
+terragon-backlog: ## View current Terragon value backlog
+	@echo "📋 Current Terragon Value Backlog:"
+	@echo "================================="
+	@head -30 TERRAGON_VALUE_BACKLOG.md
