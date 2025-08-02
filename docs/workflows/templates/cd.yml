@@ -1,0 +1,448 @@
+# Continuous Deployment Pipeline for FinChat-SEC-QA
+# Copy this file to .github/workflows/cd.yml
+
+name: Continuous Deployment
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      force_deploy:
+        description: 'Force deployment (skip checks)'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  PYTHONPATH: src
+
+jobs:
+  # Build and push container images
+  build:
+    name: Build & Push Images
+    runs-on: ubuntu-latest
+    outputs:
+      image-api: ${{ steps.meta-api.outputs.tags }}
+      image-webapp: ${{ steps.meta-webapp.outputs.tags }}
+      digest-api: ${{ steps.build-api.outputs.digest }}
+      digest-webapp: ${{ steps.build-webapp.outputs.digest }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata for API
+        id: meta-api
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-api
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Extract metadata for WebApp
+        id: meta-webapp
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-webapp
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push API image
+        id: build-api
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/Dockerfile.api
+          push: true
+          tags: ${{ steps.meta-api.outputs.tags }}
+          labels: ${{ steps.meta-api.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64
+
+      - name: Build and push WebApp image
+        id: build-webapp
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/Dockerfile.webapp
+          push: true
+          tags: ${{ steps.meta-webapp.outputs.tags }}
+          labels: ${{ steps.meta-webapp.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64
+
+      - name: Generate SBOM for API
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ steps.meta-api.outputs.tags }}
+          artifact-name: sbom-api.spdx.json
+          output-file: sbom-api.spdx.json
+
+      - name: Generate SBOM for WebApp
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ steps.meta-webapp.outputs.tags }}
+          artifact-name: sbom-webapp.spdx.json
+          output-file: sbom-webapp.spdx.json
+
+      - name: Upload SBOMs
+        uses: actions/upload-artifact@v3
+        with:
+          name: sboms
+          path: |
+            sbom-api.spdx.json
+            sbom-webapp.spdx.json
+          retention-days: 90
+
+  # Security scanning of built images
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: build
+    strategy:
+      matrix:
+        image: [api, webapp]
+    
+    steps:
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ needs.build.outputs[format('image-{0}', matrix.image)] }}
+          format: 'sarif'
+          output: 'trivy-results-${{ matrix.image }}.sarif'
+
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results-${{ matrix.image }}.sarif'
+          category: 'trivy-${{ matrix.image }}'
+
+  # Deploy to staging environment
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [build, security-scan]
+    if: github.ref == 'refs/heads/main' || github.event.inputs.environment == 'staging'
+    environment:
+      name: staging
+      url: https://staging.finchat.example.com
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Deploy to ECS Staging
+        run: |
+          # Update ECS service with new image
+          aws ecs update-service \
+            --cluster finchat-staging \
+            --service finchat-api-staging \
+            --task-definition finchat-api-staging \
+            --force-new-deployment
+
+          aws ecs update-service \
+            --cluster finchat-staging \
+            --service finchat-webapp-staging \
+            --task-definition finchat-webapp-staging \
+            --force-new-deployment
+
+      - name: Wait for deployment
+        run: |
+          aws ecs wait services-stable \
+            --cluster finchat-staging \
+            --services finchat-api-staging finchat-webapp-staging
+
+      - name: Run smoke tests
+        run: |
+          sleep 60  # Wait for services to be ready
+          curl -f https://staging-api.finchat.example.com/health || exit 1
+          curl -f https://staging.finchat.example.com/health || exit 1
+
+      - name: Notify deployment success
+        uses: 8398a7/action-slack@v3
+        with:
+          status: success
+          channel: '#deployments'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          fields: repo,message,commit,author,action,eventName,ref,workflow
+          text: |
+            🚀 *Staging Deployment Successful*
+            Environment: staging.finchat.example.com
+            Images: ${{ needs.build.outputs.image-api }}
+
+  # Integration tests on staging
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    if: github.ref == 'refs/heads/main' || github.event.inputs.environment == 'staging'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[testing]
+
+      - name: Run integration tests against staging
+        run: |
+          pytest tests/integration/ -v \
+            --base-url=https://staging-api.finchat.example.com \
+            --junit-xml=integration-results.xml
+        env:
+          FINCHAT_TEST_TOKEN: ${{ secrets.STAGING_TEST_TOKEN }}
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: integration-test-results
+          path: integration-results.xml
+
+  # Deploy to production
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build, security-scan, integration-tests]
+    if: |
+      (github.ref == 'refs/heads/main' && success()) ||
+      (startsWith(github.ref, 'refs/tags/v') && success()) ||
+      (github.event.inputs.environment == 'production' && 
+       (success() || github.event.inputs.force_deploy == 'true'))
+    environment:
+      name: production
+      url: https://api.finchat.example.com
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_PROD }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }}
+          aws-region: us-east-1
+
+      - name: Blue-Green Deployment Setup
+        run: |
+          # Check current active environment
+          CURRENT_ENV=$(aws elbv2 describe-target-groups \
+            --names finchat-api-production \
+            --query 'TargetGroups[0].Tags[?Key==`Environment`].Value' \
+            --output text)
+          
+          if [ "$CURRENT_ENV" = "blue" ]; then
+            export DEPLOY_ENV="green"
+            export SWITCH_FROM="blue"
+          else
+            export DEPLOY_ENV="blue"
+            export SWITCH_FROM="green"
+          fi
+          
+          echo "DEPLOY_ENV=$DEPLOY_ENV" >> $GITHUB_ENV
+          echo "SWITCH_FROM=$SWITCH_FROM" >> $GITHUB_ENV
+
+      - name: Deploy to Production (${{ env.DEPLOY_ENV }})
+        run: |
+          # Update task definition with new image
+          aws ecs register-task-definition \
+            --family finchat-api-production-${{ env.DEPLOY_ENV }} \
+            --container-definitions '[{
+              "name": "finchat-api",
+              "image": "${{ needs.build.outputs.image-api }}",
+              "portMappings": [{"containerPort": 8000}],
+              "environment": [
+                {"name": "ENVIRONMENT", "value": "production"},
+                {"name": "DEPLOY_COLOR", "value": "${{ env.DEPLOY_ENV }}"}
+              ]
+            }]'
+
+          # Update service
+          aws ecs update-service \
+            --cluster finchat-production \
+            --service finchat-api-production-${{ env.DEPLOY_ENV }} \
+            --task-definition finchat-api-production-${{ env.DEPLOY_ENV }} \
+            --force-new-deployment
+
+      - name: Wait for deployment stability
+        run: |
+          aws ecs wait services-stable \
+            --cluster finchat-production \
+            --services finchat-api-production-${{ env.DEPLOY_ENV }}
+
+      - name: Health check new deployment
+        run: |
+          # Wait for health checks to pass
+          for i in {1..30}; do
+            if curl -f https://api-${{ env.DEPLOY_ENV }}.finchat.example.com/health; then
+              echo "Health check passed"
+              break
+            fi
+            echo "Health check attempt $i failed, retrying..."
+            sleep 10
+          done
+
+      - name: Run production smoke tests
+        run: |
+          pytest tests/smoke/ -v \
+            --base-url=https://api-${{ env.DEPLOY_ENV }}.finchat.example.com \
+            --junit-xml=smoke-results.xml
+        env:
+          FINCHAT_TEST_TOKEN: ${{ secrets.PRODUCTION_TEST_TOKEN }}
+
+      - name: Switch traffic to new deployment
+        run: |
+          # Update load balancer to point to new environment
+          aws elbv2 modify-target-group \
+            --target-group-arn ${{ secrets.PRODUCTION_TARGET_GROUP_ARN }} \
+            --tags Key=Environment,Value=${{ env.DEPLOY_ENV }}
+
+      - name: Verify traffic switch
+        run: |
+          sleep 30  # Wait for DNS propagation
+          for i in {1..10}; do
+            if curl -f https://api.finchat.example.com/health; then
+              echo "Traffic switch verification passed"
+              break
+            fi
+            echo "Verification attempt $i failed, retrying..."
+            sleep 10
+          done
+
+      - name: Cleanup old deployment
+        run: |
+          # Scale down old environment
+          aws ecs update-service \
+            --cluster finchat-production \
+            --service finchat-api-production-${{ env.SWITCH_FROM }} \
+            --desired-count 0
+
+      - name: Notify deployment success
+        uses: 8398a7/action-slack@v3
+        with:
+          status: success
+          channel: '#deployments'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          fields: repo,message,commit,author,action,eventName,ref,workflow
+          text: |
+            🎉 *Production Deployment Successful*
+            Environment: api.finchat.example.com
+            Color: ${{ env.DEPLOY_ENV }}
+            Images: ${{ needs.build.outputs.image-api }}
+
+  # Rollback capability
+  rollback:
+    name: Rollback Production
+    runs-on: ubuntu-latest
+    if: failure() && needs.deploy-production.result == 'failure'
+    needs: [deploy-production]
+    environment:
+      name: production-rollback
+    
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_PROD }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }}
+          aws-region: us-east-1
+
+      - name: Rollback to previous deployment
+        run: |
+          # Get current environment
+          CURRENT_ENV=$(aws elbv2 describe-target-groups \
+            --names finchat-api-production \
+            --query 'TargetGroups[0].Tags[?Key==`Environment`].Value' \
+            --output text)
+          
+          if [ "$CURRENT_ENV" = "blue" ]; then
+            export ROLLBACK_TO="green"
+          else
+            export ROLLBACK_TO="blue"
+          fi
+          
+          # Switch traffic back
+          aws elbv2 modify-target-group \
+            --target-group-arn ${{ secrets.PRODUCTION_TARGET_GROUP_ARN }} \
+            --tags Key=Environment,Value=$ROLLBACK_TO
+          
+          # Scale up previous environment
+          aws ecs update-service \
+            --cluster finchat-production \
+            --service finchat-api-production-$ROLLBACK_TO \
+            --desired-count 2
+
+      - name: Notify rollback
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          channel: '#critical-alerts'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          fields: repo,message,commit,author,action,eventName,ref,workflow
+          text: |
+            🚨 *Production Rollback Executed*
+            Reason: Deployment failure
+            Rolled back to previous version
+
+# Required secrets:
+# - GITHUB_TOKEN (automatically provided)
+# - AWS_ACCESS_KEY_ID (staging)
+# - AWS_SECRET_ACCESS_KEY (staging)
+# - AWS_ACCESS_KEY_ID_PROD (production)
+# - AWS_SECRET_ACCESS_KEY_PROD (production)
+# - STAGING_TEST_TOKEN
+# - PRODUCTION_TEST_TOKEN
+# - PRODUCTION_TARGET_GROUP_ARN
+# - SLACK_WEBHOOK_URL

@@ -1,0 +1,498 @@
+# Automated Dependency Updates for FinChat-SEC-QA
+# Copy this file to .github/workflows/dependency-update.yml
+
+name: Dependency Updates
+
+on:
+  schedule:
+    # Run weekly on Mondays at 6 AM UTC
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      update_type:
+        description: 'Type of update to perform'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+          - security
+      auto_merge:
+        description: 'Auto-merge if tests pass'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  PYTHONPATH: src
+  FINCHAT_LOG_LEVEL: DEBUG
+  FINCHAT_TEST_MODE: true
+
+jobs:
+  # Security updates (highest priority)
+  security-updates:
+    name: Security Updates
+    runs-on: ubuntu-latest
+    if: github.event.inputs.update_type == 'security' || github.event_name == 'schedule'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install safety pip-audit
+
+      - name: Check for security vulnerabilities
+        id: security-check
+        run: |
+          # Check current vulnerabilities
+          safety check --json --output current-vulns.json || true
+          pip-audit --format=json --output audit-report.json || true
+          
+          # Count vulnerabilities
+          SAFETY_VULNS=$(jq length current-vulns.json 2>/dev/null || echo "0")
+          AUDIT_VULNS=$(jq '.vulnerabilities | length' audit-report.json 2>/dev/null || echo "0")
+          
+          echo "safety_vulns=$SAFETY_VULNS" >> $GITHUB_OUTPUT
+          echo "audit_vulns=$AUDIT_VULNS" >> $GITHUB_OUTPUT
+          
+          if [ "$SAFETY_VULNS" -gt 0 ] || [ "$AUDIT_VULNS" -gt 0 ]; then
+            echo "has_vulnerabilities=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_vulnerabilities=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create security update PR
+        if: steps.security-check.outputs.has_vulnerabilities == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: automated/security-updates
+          title: '🔒 Security: Update vulnerable dependencies'
+          body: |
+            ## Security Dependency Updates
+            
+            This PR contains security updates for vulnerable dependencies.
+            
+            **Security Scan Results:**
+            - Safety vulnerabilities found: ${{ steps.security-check.outputs.safety_vulns }}
+            - Audit vulnerabilities found: ${{ steps.security-check.outputs.audit_vulns }}
+            
+            **Files changed:**
+            - `pyproject.toml` - Updated dependency versions
+            
+            **Testing:**
+            - All tests will run automatically
+            - Manual testing recommended for critical security fixes
+            
+            **Review Notes:**
+            - Review breaking changes in dependency changelogs
+            - Verify security fixes address reported vulnerabilities
+            - Check for any required code changes
+            
+            ---
+            *This PR was created automatically by the dependency update workflow*
+          labels: |
+            security
+            dependencies
+            automated
+          assignees: |
+            security-team
+          reviewers: |
+            security-team
+
+  # Regular dependency updates
+  dependency-updates:
+    name: Dependency Updates
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event.inputs.update_type != 'security'
+    strategy:
+      matrix:
+        update_type: [patch, minor]
+        include:
+          - update_type: patch
+            pip_outdated_args: "--format=json"
+            severity: "low"
+          - update_type: minor
+            pip_outdated_args: "--format=json"
+            severity: "medium"
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pip-tools pip-check-updates
+
+      - name: Get current dependencies
+        run: |
+          pip list --format=json > current-deps.json
+          pip list --outdated --format=json > outdated-deps.json || echo "[]" > outdated-deps.json
+
+      - name: Update dependencies (${{ matrix.update_type }})
+        id: update-deps
+        run: |
+          # Create backup of current pyproject.toml
+          cp pyproject.toml pyproject.toml.backup
+          
+          # Update patch/minor versions only
+          if [ "${{ matrix.update_type }}" = "patch" ]; then
+            # Update patch versions (e.g., 1.2.3 -> 1.2.4)
+            python scripts/update_dependencies.py --level=patch
+          elif [ "${{ matrix.update_type }}" = "minor" ]; then
+            # Update minor versions (e.g., 1.2.3 -> 1.3.0)
+            python scripts/update_dependencies.py --level=minor
+          fi
+          
+          # Check if any changes were made
+          if ! diff -q pyproject.toml pyproject.toml.backup > /dev/null; then
+            echo "changes_made=true" >> $GITHUB_OUTPUT
+            
+            # Get list of updated packages
+            python scripts/get_dependency_changes.py \
+              pyproject.toml.backup pyproject.toml > dependency-changes.md
+          else
+            echo "changes_made=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Install updated dependencies
+        if: steps.update-deps.outputs.changes_made == 'true'
+        run: |
+          pip install -e .[dev,testing,security]
+
+      - name: Run tests with updated dependencies
+        if: steps.update-deps.outputs.changes_made == 'true'
+        run: |
+          # Run full test suite
+          pytest tests/ -v --tb=short \
+            --cov=src --cov-report=xml --cov-report=term-missing
+
+      - name: Run security checks
+        if: steps.update-deps.outputs.changes_made == 'true'
+        run: |
+          # Security scanning
+          bandit -r src/ -f json -o bandit-report.json
+          safety check --json --output safety-report.json
+          
+          # Check for any new vulnerabilities
+          NEW_VULNS=$(jq length safety-report.json 2>/dev/null || echo "0")
+          echo "new_vulnerabilities=$NEW_VULNS" >> $GITHUB_OUTPUT
+
+      - name: Run compatibility checks
+        if: steps.update-deps.outputs.changes_made == 'true'
+        run: |
+          # Check for compatibility issues
+          python -c "import finchat_sec_qa; print('✅ Import check passed')"
+          
+          # Check for deprecated API usage
+          python -Wd -c "import finchat_sec_qa" 2> deprecation-warnings.txt || true
+          
+          if [ -s deprecation-warnings.txt ]; then
+            echo "deprecation_warnings=true" >> $GITHUB_OUTPUT
+          else
+            echo "deprecation_warnings=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create dependency update PR
+        if: steps.update-deps.outputs.changes_made == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: automated/dependency-updates-${{ matrix.update_type }}
+          title: '⬆️ Dependencies: ${{ matrix.update_type }} updates'
+          body: |
+            ## Dependency Updates (${{ matrix.update_type }})
+            
+            This PR updates dependencies to their latest ${{ matrix.update_type }} versions.
+            
+            ### Changes Summary
+            
+            ${{ steps.update-deps.outputs.changes_made == 'true' && '```markdown' || '' }}
+            ${{ steps.update-deps.outputs.changes_made == 'true' && '$(cat dependency-changes.md)' || 'No changes detected' }}
+            ${{ steps.update-deps.outputs.changes_made == 'true' && '```' || '' }}
+            
+            ### Test Results
+            
+            - ✅ All tests passed with updated dependencies
+            - ✅ Security scan completed
+            - ${{ steps.security-check.outputs.new_vulnerabilities == '0' && '✅' || '⚠️' }} Security vulnerabilities: ${{ steps.security-check.outputs.new_vulnerabilities || '0' }}
+            - ${{ steps.compatibility-check.outputs.deprecation_warnings == 'false' && '✅' || '⚠️' }} Deprecation warnings: ${{ steps.compatibility-check.outputs.deprecation_warnings == 'true' && 'Found' || 'None' }}
+            
+            ### Review Checklist
+            
+            - [ ] Review dependency changes for breaking changes
+            - [ ] Check changelogs for important updates
+            - [ ] Verify all tests pass
+            - [ ] Test critical application flows manually
+            - [ ] Confirm no new security vulnerabilities
+            
+            ### Auto-merge
+            
+            ${{ github.event.inputs.auto_merge == 'true' && '🤖 This PR is configured for auto-merge if all checks pass.' || '👤 Manual review and merge required.' }}
+            
+            ---
+            *This PR was created automatically by the dependency update workflow*
+          labels: |
+            dependencies
+            automated
+            ${{ matrix.update_type }}
+          assignees: |
+            development-team
+
+  # Major version updates (manual review required)
+  major-updates:
+    name: Major Version Updates
+    runs-on: ubuntu-latest
+    if: github.event.inputs.update_type == 'major'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Check for major updates
+        id: major-check
+        run: |
+          pip list --outdated --format=json > outdated.json
+          
+          # Filter for major version updates
+          python scripts/filter_major_updates.py outdated.json > major-updates.json
+          
+          MAJOR_COUNT=$(jq length major-updates.json)
+          echo "major_updates_count=$MAJOR_COUNT" >> $GITHUB_OUTPUT
+          
+          if [ "$MAJOR_COUNT" -gt 0 ]; then
+            echo "has_major_updates=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_major_updates=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create major updates issue
+        if: steps.major-check.outputs.has_major_updates == 'true'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const majorUpdates = require('./major-updates.json');
+            
+            const body = `## Major Dependency Updates Available
+            
+            The following dependencies have major version updates available that require manual review:
+            
+            | Package | Current | Latest | Breaking Changes |
+            |---------|---------|--------|------------------|
+            ${majorUpdates.map(pkg => 
+              `| ${pkg.name} | ${pkg.version} | ${pkg.latest_version} | [Changelog](${pkg.home_page}/releases) |`
+            ).join('\n')}
+            
+            ### Action Required
+            
+            Major version updates often include breaking changes. Please:
+            
+            1. Review the changelog for each package
+            2. Test updates in a feature branch
+            3. Update code if breaking changes affect our usage
+            4. Update tests to handle any behavioral changes
+            
+            ### Create Update Branch
+            
+            To create an update branch for testing:
+            
+            \`\`\`bash
+            git checkout -b feature/major-dependency-updates
+            # Update dependencies manually
+            # Test thoroughly
+            # Create PR for review
+            \`\`\`
+            
+            ---
+            *This issue was created automatically by the dependency update workflow*`;
+            
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '📋 Major Dependency Updates Available',
+              body: body,
+              labels: ['dependencies', 'major-update', 'manual-review']
+            });
+
+  # Dependency vulnerability monitoring
+  vulnerability-monitoring:
+    name: Vulnerability Monitoring
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install monitoring tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install safety pip-audit cyclonedx-bom
+
+      - name: Run comprehensive security scan
+        run: |
+          # Generate SBOM
+          cyclonedx-py -o sbom.json
+          
+          # Run security scans
+          safety check --json --output safety-report.json || true
+          pip-audit --format=json --output audit-report.json || true
+          
+          # Combine results
+          python scripts/combine_security_reports.py \
+            safety-report.json audit-report.json sbom.json \
+            > security-summary.json
+
+      - name: Upload security reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-reports
+          path: |
+            safety-report.json
+            audit-report.json
+            sbom.json
+            security-summary.json
+          retention-days: 90
+
+      - name: Check for critical vulnerabilities
+        id: critical-check
+        run: |
+          CRITICAL_COUNT=$(jq '[.[] | select(.severity == "CRITICAL")] | length' security-summary.json)
+          HIGH_COUNT=$(jq '[.[] | select(.severity == "HIGH")] | length' security-summary.json)
+          
+          echo "critical_vulns=$CRITICAL_COUNT" >> $GITHUB_OUTPUT
+          echo "high_vulns=$HIGH_COUNT" >> $GITHUB_OUTPUT
+          
+          if [ "$CRITICAL_COUNT" -gt 0 ]; then
+            echo "has_critical=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_critical=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create security alert
+        if: steps.critical-check.outputs.has_critical == 'true'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const securitySummary = require('./security-summary.json');
+            const criticalVulns = securitySummary.filter(v => v.severity === 'CRITICAL');
+            const highVulns = securitySummary.filter(v => v.severity === 'HIGH');
+            
+            const body = `## 🚨 Critical Security Vulnerabilities Detected
+            
+            **Critical vulnerabilities found:** ${criticalVulns.length}
+            **High severity vulnerabilities found:** ${highVulns.length}
+            
+            ### Critical Vulnerabilities
+            
+            ${criticalVulns.map(vuln => `
+            #### ${vuln.package} ${vuln.installed_version}
+            - **CVE:** ${vuln.id}
+            - **Description:** ${vuln.description}
+            - **Fix:** Update to ${vuln.fixed_version || 'latest version'}
+            `).join('\n')}
+            
+            ### Immediate Actions Required
+            
+            1. 🔴 **URGENT:** Address critical vulnerabilities immediately
+            2. ⚠️ Review high severity vulnerabilities
+            3. 🔄 Run dependency security updates workflow
+            4. ✅ Verify fixes with security scanning
+            
+            ### Automated Remediation
+            
+            Run the security updates workflow:
+            
+            \`\`\`bash
+            gh workflow run dependency-update.yml --ref main -f update_type=security
+            \`\`\`
+            
+            ---
+            *This alert was created automatically by vulnerability monitoring*`;
+            
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🚨 CRITICAL: Security Vulnerabilities Detected',
+              body: body,
+              labels: ['security', 'critical', 'vulnerability', 'urgent']
+            });
+
+      - name: Notify security team
+        if: steps.critical-check.outputs.has_critical == 'true'
+        uses: 8398a7/action-slack@v3
+        with:
+          status: custom
+          channel: '#security-alerts'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          custom_payload: |
+            {
+              "text": "🚨 Critical Security Vulnerabilities Detected",
+              "attachments": [
+                {
+                  "color": "danger",
+                  "fields": [
+                    {
+                      "title": "Repository",
+                      "value": "${{ github.repository }}",
+                      "short": true
+                    },
+                    {
+                      "title": "Critical Vulnerabilities",
+                      "value": "${{ steps.critical-check.outputs.critical_vulns }}",
+                      "short": true
+                    },
+                    {
+                      "title": "High Severity",
+                      "value": "${{ steps.critical-check.outputs.high_vulns }}",
+                      "short": true
+                    },
+                    {
+                      "title": "Action Required",
+                      "value": "Immediate security updates needed",
+                      "short": false
+                    }
+                  ]
+                }
+              ]
+            }
+
+# Required secrets:
+# - GITHUB_TOKEN (automatically provided)
+# - SLACK_WEBHOOK_URL (for notifications)
+
+# Required scripts (create these in scripts/ directory):
+# - update_dependencies.py
+# - get_dependency_changes.py
+# - filter_major_updates.py
+# - combine_security_reports.py
