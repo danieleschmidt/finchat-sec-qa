@@ -9,23 +9,36 @@
 /src/ @finchat-team
 
 # Security-critical components
-/src/finchat_sec_qa/secrets_manager.py @finchat-team
-/src/finchat_sec_qa/file_security.py @finchat-team
-/src/finchat_sec_qa/validation.py @finchat-team
+/src/finchat_sec_qa/secrets_manager.py @security-team @finchat-team
+/src/finchat_sec_qa/file_security.py @security-team @finchat-team
+/src/finchat_sec_qa/validation.py @security-team @finchat-team
 
 # Infrastructure and deployment
-/docker/ @finchat-team
-/scripts/ @finchat-team
-docker-compose*.yml @finchat-team
+/docker/ @devops-team @finchat-team
+/scripts/ @devops-team @finchat-team
+docker-compose*.yml @devops-team @finchat-team
 
 # CI/CD and workflows
-/.github/workflows/ @finchat-team
+/.github/workflows/ @devops-team @finchat-team
 
 # Configuration files
 pyproject.toml @finchat-team
 .pre-commit-config.yaml @finchat-team
-Makefile @finchat-team
+Makefile @devops-team @finchat-team
 
 # Security policies and compliance
-SECURITY.md @finchat-team
-.secrets.baseline @finchat-team
+SECURITY.md @security-team @finchat-team
+.secrets.baseline @security-team @finchat-team
+
+# Documentation
+/docs/ @docs-team @finchat-team
+README.md @docs-team @finchat-team
+CONTRIBUTING.md @docs-team @finchat-team
+
+# Testing infrastructure
+/tests/ @qa-team @finchat-team
+/benchmarks/ @qa-team @finchat-team
+
+# Monitoring and observability
+/docs/monitoring/ @devops-team @finchat-team
+/docs/runbooks/ @devops-team @finchat-team
