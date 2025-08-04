@@ -208,7 +208,7 @@ def performance_thresholds() -> Dict:
 
 
 # Pytest markers for test organization
-pytest.register_assertion_rewrite("tests.helpers.assertions")
+pytest.register_assert_rewrite("tests.helpers.assertions")
 
 
 def pytest_configure(config):

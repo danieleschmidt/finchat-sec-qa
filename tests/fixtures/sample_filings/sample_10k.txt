@@ -1,0 +1,26 @@
+
+        UNITED STATES SECURITIES AND EXCHANGE COMMISSION
+        Washington, D.C. 20549
+        
+        FORM 10-K
+        
+        ANNUAL REPORT PURSUANT TO SECTION 13 OR 15(d) OF THE SECURITIES EXCHANGE ACT OF 1934
+        
+        For the fiscal year ended December 31, 2023
+        
+        Commission File Number: 001-12345
+        
+        SAMPLE COMPANY INC.
+        
+        Risk Factors:
+        
+        Our business is subject to various risks including:
+        - Market volatility may impact our revenue
+        - Regulatory changes could affect our operations
+        - Competition in the technology sector is intense
+        
+        Management's Discussion and Analysis:
+        
+        Our revenue increased by 15% year-over-year due to strong product adoption.
+        We continue to invest in research and development to maintain our competitive position.
+        

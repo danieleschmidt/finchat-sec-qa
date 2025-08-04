@@ -3,14 +3,12 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from pathlib import Path
-from typing import Tuple, List
+from typing import List, Tuple
 
-from .edgar_client import EdgarClient, AsyncEdgarClient, FilingMetadata
-from .qa_engine import FinancialQAEngine
-from .citation import Citation  
+from .citation import Citation
+from .edgar_client import AsyncEdgarClient, EdgarClient, FilingMetadata
 from .file_security import safe_read_file
-
+from .qa_engine import FinancialQAEngine
 
 logger = logging.getLogger(__name__)
 
@@ -36,9 +34,9 @@ class QueryHandler:
         self.engine = qa_engine
 
     def process_query(
-        self, 
-        ticker: str, 
-        question: str, 
+        self,
+        ticker: str,
+        question: str,
         form_type: str = "10-K",
         limit: int = 1
     ) -> Tuple[str, List[Citation]]:
@@ -66,24 +64,24 @@ class QueryHandler:
             Exception: If QA engine processing fails
         """
         logger.debug("Processing query for ticker=%s, question=%s", ticker, question[:50])
-        
+
         # Get filings
         filings = self._get_filings(ticker, form_type, limit)
-        
+
         # Process filing (use first filing)
         filing_text = self._download_and_read_filing(filings[0])
-        
+
         # Get answer through QA engine
         self.engine.add_document(filings[0].accession_no, filing_text)
         answer, citations = self.engine.answer_with_citations(question)
-        
+
         logger.debug("Query processed successfully, found %d citations", len(citations))
         return answer, citations
 
     def _get_filings(
-        self, 
-        ticker: str, 
-        form_type: str, 
+        self,
+        ticker: str,
+        form_type: str,
         limit: int
     ) -> List[FilingMetadata]:
         """Retrieve SEC filings for a ticker.
@@ -100,15 +98,15 @@ class QueryHandler:
             ValueError: If no filings are found for the ticker
         """
         logger.debug("Retrieving %s filings for ticker %s", form_type, ticker)
-        
+
         filings = self.client.get_recent_filings(
             ticker, form_type=form_type, limit=limit
         )
-        
+
         if not filings:
             logger.warning("No filings found for ticker: %s", ticker)
             raise ValueError(f"No filings found for ticker {ticker}")
-        
+
         logger.debug("Found %d filing(s) for ticker %s", len(filings), ticker)
         return filings
 
@@ -126,10 +124,10 @@ class QueryHandler:
             ValueError: If file path validation fails (security)
         """
         logger.debug("Downloading filing: %s", filing.accession_no)
-        
+
         path = self.client.download_filing(filing)
         filing_text = safe_read_file(path)
-        
+
         logger.debug("Filing downloaded and read, length: %d chars", len(filing_text))
         return filing_text
 
@@ -160,9 +158,9 @@ class AsyncQueryHandler:
         self.engine = qa_engine
 
     async def process_query(
-        self, 
-        ticker: str, 
-        question: str, 
+        self,
+        ticker: str,
+        question: str,
         form_type: str = "10-K",
         limit: int = 1
     ) -> Tuple[str, List[Citation]]:
@@ -190,28 +188,28 @@ class AsyncQueryHandler:
             Exception: If QA engine processing fails
         """
         logger.debug("Processing async query for ticker=%s, question=%s", ticker, question[:50])
-        
+
         # Get filings asynchronously
         filings = await self._get_filings(ticker, form_type, limit)
-        
+
         # Process filing (use first filing)
         filing_text = await self._download_and_read_filing(filings[0])
-        
+
         # Get answer through QA engine (this is CPU-bound, so we run it in executor)
         loop = asyncio.get_event_loop()
         def _process_document():
             self.engine.add_document(filings[0].accession_no, filing_text)
             return self.engine.answer_with_citations(question)
-        
+
         answer, citations = await loop.run_in_executor(None, _process_document)
-        
+
         logger.debug("Async query processed successfully, found %d citations", len(citations))
         return answer, citations
 
     async def _get_filings(
-        self, 
-        ticker: str, 
-        form_type: str, 
+        self,
+        ticker: str,
+        form_type: str,
         limit: int
     ) -> List[FilingMetadata]:
         """Retrieve SEC filings for a ticker asynchronously.
@@ -228,15 +226,15 @@ class AsyncQueryHandler:
             ValueError: If no filings are found for the ticker
         """
         logger.debug("Retrieving %s filings for ticker %s (async)", form_type, ticker)
-        
+
         filings = await self.client.get_recent_filings(
             ticker, form_type=form_type, limit=limit
         )
-        
+
         if not filings:
             logger.warning("No filings found for ticker: %s", ticker)
             raise ValueError(f"No filings found for ticker {ticker}")
-        
+
         logger.debug("Found %d filing(s) for ticker %s (async)", len(filings), ticker)
         return filings
 
@@ -254,13 +252,13 @@ class AsyncQueryHandler:
             ValueError: If file path validation fails (security)
         """
         logger.debug("Downloading filing: %s (async)", filing.accession_no)
-        
+
         path = await self.client.download_filing(filing)
-        
+
         # Read file asynchronously using asyncio with secure file operations
         loop = asyncio.get_event_loop()
         filing_text = await loop.run_in_executor(None, lambda: safe_read_file(path))
-        
+
         logger.debug("Filing downloaded and read (async), length: %d chars", len(filing_text))
         return filing_text
 

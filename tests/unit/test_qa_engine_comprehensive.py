@@ -13,14 +13,14 @@ from tests.helpers.assertions import (
 )
 
 
-class TestQAEngineCore:
+class TestFinancialQAEngineCore:
     """Test core QA engine functionality."""
     
     @pytest.fixture
     def qa_engine(self, mock_openai_client, test_config):
         """Create QA engine instance for testing."""
-        from finchat_sec_qa.qa_engine import QAEngine
-        return QAEngine(config=test_config, openai_client=mock_openai_client)
+        from finchat_sec_qa.qa_engine import FinancialQAEngine
+        return FinancialQAEngine()
     
     def test_query_processing_structure(self, qa_engine, sample_query, sample_filing_path):
         """Test that query processing returns proper structure."""
@@ -60,7 +60,7 @@ class TestQAEngineCore:
         with pytest.raises(FileNotFoundError):
             qa_engine.process_query(sample_query, "nonexistent_file.txt")
     
-    @patch('finchat_sec_qa.qa_engine.QAEngine._generate_embeddings')
+    @patch('finchat_sec_qa.qa_engine.FinancialQAEngine._generate_embeddings')
     def test_embedding_generation_called(self, mock_embeddings, qa_engine, sample_query, sample_filing_path):
         """Test that embedding generation is called appropriately."""
         mock_embeddings.return_value = [[0.1] * 1536]
@@ -85,13 +85,13 @@ class TestQAEngineCore:
         assert_valid_response_structure(result)
 
 
-class TestQAEngineEdgeCases:
+class TestFinancialQAEngineEdgeCases:
     """Test edge cases and error conditions."""
     
     @pytest.fixture
     def qa_engine(self, mock_openai_client, test_config):
-        from finchat_sec_qa.qa_engine import QAEngine
-        return QAEngine(config=test_config, openai_client=mock_openai_client)
+        from finchat_sec_qa.qa_engine import FinancialQAEngine
+        return FinancialQAEngine()
     
     def test_malformed_filing_content(self, qa_engine, sample_query, temp_cache_dir):
         """Test handling of malformed filing content."""
@@ -121,7 +121,7 @@ class TestQAEngineEdgeCases:
         result = qa_engine.process_query(unicode_query, str(unicode_file))
         assert_valid_response_structure(result)
     
-    @patch('finchat_sec_qa.qa_engine.QAEngine._call_openai')
+    @patch('finchat_sec_qa.qa_engine.FinancialQAEngine._call_openai')
     def test_openai_api_failure_handling(self, mock_openai, qa_engine, sample_query, sample_filing_path):
         """Test handling of OpenAI API failures."""
         mock_openai.side_effect = Exception("API rate limit exceeded")
@@ -162,16 +162,16 @@ class TestQAEngineEdgeCases:
         assert_concurrent_safety(results, len(queries))
 
 
-class TestQAEngineIntegration:
+class TestFinancialQAEngineIntegration:
     """Integration tests with other components."""
     
     @pytest.fixture
     def qa_engine_with_cache(self, mock_openai_client, test_config, temp_cache_dir):
         """Create QA engine with caching enabled."""
-        from finchat_sec_qa.qa_engine import QAEngine
+        from finchat_sec_qa.qa_engine import FinancialFinancialQAEngine
         config = test_config.copy()
         config["cache"]["directory"] = str(temp_cache_dir)
-        return QAEngine(config=config, openai_client=mock_openai_client)
+        return FinancialQAEngine(config=config, openai_client=mock_openai_client)
     
     def test_caching_behavior(self, qa_engine_with_cache, sample_query, sample_filing_path):
         """Test that caching improves performance on repeated queries."""

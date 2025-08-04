@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Dict, List
-import asyncio
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import dataclass
+import logging
+from typing import Dict, List
 
 from .qa_engine import FinancialQAEngine
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -24,11 +23,11 @@ class CompanyAnswer:
 def _process_single_document(doc_id: str, document_text: str, question: str) -> CompanyAnswer:
     """Process a single document with its own QA engine instance."""
     logger.debug("Processing document %s", doc_id)
-    
+
     # Create dedicated QA engine for this document
     engine = FinancialQAEngine()
     engine.add_document(doc_id, document_text)
-    
+
     # Get answer for this specific document
     answer, _ = engine.answer_with_citations(question)
     return CompanyAnswer(doc_id=doc_id, answer=answer)
@@ -57,9 +56,9 @@ def compare_question_across_filings(
         max_workers = min(4, len(documents))
 
     logger.info("Processing %d documents in parallel with %d workers", len(documents), max_workers)
-    
+
     results: List[CompanyAnswer] = []
-    
+
     # Use ThreadPoolExecutor for parallel processing
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         # Submit all document processing tasks
@@ -67,7 +66,7 @@ def compare_question_across_filings(
             executor.submit(_process_single_document, doc_id, doc_text, question): doc_id
             for doc_id, doc_text in documents.items()
         }
-        
+
         # Collect results as they complete
         for future in as_completed(future_to_doc):
             doc_id = future_to_doc[future]
@@ -79,7 +78,7 @@ def compare_question_across_filings(
                 logger.error("Error processing document %s: %s", doc_id, e)
                 # Add error result so we don't lose track of failed documents
                 results.append(CompanyAnswer(doc_id=doc_id, answer=f"Error: {str(e)}"))
-    
+
     logger.info("Completed parallel processing of %d documents", len(results))
     return results
 

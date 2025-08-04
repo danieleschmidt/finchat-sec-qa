@@ -7,20 +7,21 @@ from __future__ import annotations
 
 import asyncio
 import time
-from typing import Dict, Any, Optional, Union
+from typing import Any, Dict, Optional
 from urllib.parse import urljoin
+
 import httpx
 
-from .models import (
-    QueryResponse,
-    RiskAnalysisResponse,
-    HealthCheckResponse,
-    ClientConfig,
-)
 from .exceptions import (
     FinChatAPIError,
-    FinChatConnectionError,
     FinChatConfigurationError,
+    FinChatConnectionError,
+)
+from .models import (
+    ClientConfig,
+    HealthCheckResponse,
+    QueryResponse,
+    RiskAnalysisResponse,
 )
 
 
@@ -39,7 +40,7 @@ class FinChatClient:
         >>> with FinChatClient() as client:
         ...     result = client.query("What was Apple's revenue?", "AAPL", "10-K")
     """
-    
+
     def __init__(
         self,
         base_url: str = "http://localhost:8000",
@@ -69,33 +70,33 @@ class FinChatClient:
         )
         self._client: Optional[httpx.Client] = None
         self._validate_config()
-    
+
     def _validate_config(self) -> None:
         """Validate client configuration."""
         if not self.config.base_url:
             raise FinChatConfigurationError("base_url is required")
-        
+
         if not self.config.base_url.startswith(("http://", "https://")):
             raise FinChatConfigurationError("base_url must start with http:// or https://")
-        
+
         if self.config.timeout <= 0:
             raise FinChatConfigurationError("timeout must be positive")
-    
+
     @property
     def base_url(self) -> str:
         """Get the base URL."""
         return self.config.base_url
-    
+
     @property
     def timeout(self) -> int:
         """Get the timeout."""
         return self.config.timeout
-    
+
     @property
     def api_key(self) -> Optional[str]:
         """Get the API key."""
         return self.config.api_key
-    
+
     def __enter__(self) -> FinChatClient:
         """Context manager entry."""
         self._client = httpx.Client(
@@ -103,13 +104,13 @@ class FinChatClient:
             headers=self.config.get_headers(),
         )
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         """Context manager exit."""
         if self._client:
             self._client.close()
             self._client = None
-    
+
     def _get_client(self) -> httpx.Client:
         """Get HTTP client, creating one if needed."""
         if self._client is None:
@@ -118,7 +119,7 @@ class FinChatClient:
                 headers=self.config.get_headers(),
             )
         return self._client
-    
+
     def _make_request(
         self,
         method: str,
@@ -129,9 +130,9 @@ class FinChatClient:
         """Make HTTP request with retries and error handling."""
         url = urljoin(self.config.base_url, endpoint)
         client = self._get_client()
-        
+
         last_exception = None
-        
+
         for attempt in range(self.config.max_retries + 1):
             try:
                 if method.upper() == "GET":
@@ -140,13 +141,13 @@ class FinChatClient:
                     response = client.post(url, json=data, params=params)
                 else:
                     raise ValueError(f"Unsupported HTTP method: {method}")
-                
+
                 # Handle HTTP errors
                 if response.status_code >= 400:
                     raise FinChatAPIError.from_response(response)
-                
+
                 return response.json()
-                
+
             except httpx.RequestError as e:
                 last_exception = FinChatConnectionError.from_httpx_error(e)
                 if attempt < self.config.max_retries:
@@ -154,16 +155,16 @@ class FinChatClient:
                     continue
                 else:
                     raise last_exception
-            
+
             except FinChatAPIError:
                 # Don't retry API errors
                 raise
-        
+
         # Should not reach here, but just in case
         if last_exception:
             raise last_exception
         raise FinChatConnectionError("Failed to make request after retries")
-    
+
     def query(
         self,
         question: str,
@@ -194,10 +195,10 @@ class FinChatClient:
             "form_type": form_type,
             "limit": limit,
         }
-        
+
         response_data = self._make_request("POST", "/query", data=data)
         return QueryResponse.from_dict(response_data)
-    
+
     def analyze_risk(self, text: str) -> RiskAnalysisResponse:
         """Analyze the risk/sentiment of financial text.
         
@@ -213,10 +214,10 @@ class FinChatClient:
             FinChatConnectionError: If unable to connect to the service
         """
         data = {"text": text}
-        
+
         response_data = self._make_request("POST", "/risk", data=data)
         return RiskAnalysisResponse.from_dict(response_data)
-    
+
     def health_check(self) -> HealthCheckResponse:
         """Check the health status of the FinChat service.
         
@@ -228,7 +229,7 @@ class FinChatClient:
         """
         response_data = self._make_request("GET", "/health")
         return HealthCheckResponse.from_dict(response_data)
-    
+
     def close(self) -> None:
         """Close the HTTP client."""
         if self._client:
@@ -247,7 +248,7 @@ class AsyncFinChatClient:
         ...     result = await client.query("What was Apple's revenue?", "AAPL", "10-K")
         ...     print(result.answer)
     """
-    
+
     def __init__(
         self,
         base_url: str = "http://localhost:8000",
@@ -277,33 +278,33 @@ class AsyncFinChatClient:
         )
         self._client: Optional[httpx.AsyncClient] = None
         self._validate_config()
-    
+
     def _validate_config(self) -> None:
         """Validate client configuration."""
         if not self.config.base_url:
             raise FinChatConfigurationError("base_url is required")
-        
+
         if not self.config.base_url.startswith(("http://", "https://")):
             raise FinChatConfigurationError("base_url must start with http:// or https://")
-        
+
         if self.config.timeout <= 0:
             raise FinChatConfigurationError("timeout must be positive")
-    
+
     @property
     def base_url(self) -> str:
         """Get the base URL."""
         return self.config.base_url
-    
+
     @property
     def timeout(self) -> int:
         """Get the timeout."""
         return self.config.timeout
-    
+
     @property
     def api_key(self) -> Optional[str]:
         """Get the API key."""
         return self.config.api_key
-    
+
     async def __aenter__(self) -> AsyncFinChatClient:
         """Async context manager entry."""
         self._client = httpx.AsyncClient(
@@ -311,13 +312,13 @@ class AsyncFinChatClient:
             headers=self.config.get_headers(),
         )
         return self
-    
+
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
         """Async context manager exit."""
         if self._client:
             await self._client.aclose()
             self._client = None
-    
+
     def _get_client(self) -> httpx.AsyncClient:
         """Get HTTP client, creating one if needed."""
         if self._client is None:
@@ -326,7 +327,7 @@ class AsyncFinChatClient:
                 headers=self.config.get_headers(),
             )
         return self._client
-    
+
     async def _make_request(
         self,
         method: str,
@@ -337,9 +338,9 @@ class AsyncFinChatClient:
         """Make async HTTP request with retries and error handling."""
         url = urljoin(self.config.base_url, endpoint)
         client = self._get_client()
-        
+
         last_exception = None
-        
+
         for attempt in range(self.config.max_retries + 1):
             try:
                 if method.upper() == "GET":
@@ -348,13 +349,13 @@ class AsyncFinChatClient:
                     response = await client.post(url, json=data, params=params)
                 else:
                     raise ValueError(f"Unsupported HTTP method: {method}")
-                
+
                 # Handle HTTP errors
                 if response.status_code >= 400:
                     raise FinChatAPIError.from_response(response)
-                
+
                 return response.json()
-                
+
             except httpx.RequestError as e:
                 last_exception = FinChatConnectionError.from_httpx_error(e)
                 if attempt < self.config.max_retries:
@@ -362,16 +363,16 @@ class AsyncFinChatClient:
                     continue
                 else:
                     raise last_exception
-            
+
             except FinChatAPIError:
                 # Don't retry API errors
                 raise
-        
+
         # Should not reach here, but just in case
         if last_exception:
             raise last_exception
         raise FinChatConnectionError("Failed to make request after retries")
-    
+
     async def query(
         self,
         question: str,
@@ -402,10 +403,10 @@ class AsyncFinChatClient:
             "form_type": form_type,
             "limit": limit,
         }
-        
+
         response_data = await self._make_request("POST", "/query", data=data)
         return QueryResponse.from_dict(response_data)
-    
+
     async def analyze_risk(self, text: str) -> RiskAnalysisResponse:
         """Analyze the risk/sentiment of financial text.
         
@@ -421,10 +422,10 @@ class AsyncFinChatClient:
             FinChatConnectionError: If unable to connect to the service
         """
         data = {"text": text}
-        
+
         response_data = await self._make_request("POST", "/risk", data=data)
         return RiskAnalysisResponse.from_dict(response_data)
-    
+
     async def health_check(self) -> HealthCheckResponse:
         """Check the health status of the FinChat service.
         
@@ -436,7 +437,7 @@ class AsyncFinChatClient:
         """
         response_data = await self._make_request("GET", "/health")
         return HealthCheckResponse.from_dict(response_data)
-    
+
     async def close(self) -> None:
         """Close the HTTP client."""
         if self._client:
