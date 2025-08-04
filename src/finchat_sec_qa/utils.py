@@ -1,6 +1,6 @@
 """Utility classes and functions for FinChat SEC QA."""
-from typing import Any, Optional, Generic, TypeVar, Dict
 from collections import OrderedDict
+from typing import Generic, Optional, TypeVar
 
 K = TypeVar('K')
 V = TypeVar('V')
@@ -12,7 +12,7 @@ class BoundedCache(Generic[K, V]):
     
     Thread-safe for single-threaded use. For multi-threaded use, wrap with locks.
     """
-    
+
     def __init__(self, max_size: int = 1000):
         """
         Initialize bounded cache.
@@ -22,10 +22,10 @@ class BoundedCache(Generic[K, V]):
         """
         if max_size <= 0:
             raise ValueError("max_size must be positive")
-        
+
         self.max_size = max_size
         self._cache: OrderedDict[K, V] = OrderedDict()
-    
+
     def get(self, key: K, default: Optional[V] = None) -> Optional[V]:
         """
         Get value by key, marking it as recently used.
@@ -42,7 +42,7 @@ class BoundedCache(Generic[K, V]):
             self._cache.move_to_end(key)
             return self._cache[key]
         return default
-    
+
     def set(self, key: K, value: V) -> None:
         """
         Set key-value pair, evicting LRU items if necessary.
@@ -61,7 +61,7 @@ class BoundedCache(Generic[K, V]):
             # Evict LRU item if over capacity
             if len(self._cache) > self.max_size:
                 self._cache.popitem(last=False)  # Remove least recently used
-    
+
     def delete(self, key: K) -> bool:
         """
         Delete key from cache.
@@ -76,27 +76,27 @@ class BoundedCache(Generic[K, V]):
             del self._cache[key]
             return True
         return False
-    
+
     def clear(self) -> None:
         """Clear all items from cache."""
         self._cache.clear()
-    
+
     def __len__(self) -> int:
         """Return number of items in cache."""
         return len(self._cache)
-    
+
     def __contains__(self, key: K) -> bool:
         """Check if key exists in cache without updating LRU order."""
         return key in self._cache
-    
+
     def keys(self):
         """Return cache keys in LRU order (oldest first)."""
         return self._cache.keys()
-    
+
     def values(self):
         """Return cache values in LRU order (oldest first)."""
         return self._cache.values()
-    
+
     def items(self):
         """Return cache items in LRU order (oldest first)."""
         return self._cache.items()
@@ -109,7 +109,7 @@ class TimeBoundedCache(BoundedCache[K, V]):
     Combines LRU eviction with TTL expiration for memory-safe caching
     with automatic cleanup of stale entries.
     """
-    
+
     def __init__(self, max_size: int = 1000, ttl_seconds: float = 3600):
         """
         Initialize time-bounded cache.
@@ -121,75 +121,75 @@ class TimeBoundedCache(BoundedCache[K, V]):
         super().__init__(max_size)
         self.ttl_seconds = ttl_seconds
         self._timestamps: OrderedDict[K, float] = OrderedDict()
-        
+
         # Lazy cleanup optimization
         self._last_cleanup_time: float = 0
         self._cleanup_interval: float = max(60, ttl_seconds / 10)  # Cleanup every 60s or 10% of TTL
-    
+
     def set(self, key: K, value: V) -> None:
         """Set key-value with current timestamp."""
         import time
-        
+
         super().set(key, value)
         self._timestamps[key] = time.time()
-        
+
         # Clean up timestamps for evicted items
         cache_keys = set(self._cache.keys())
         timestamp_keys = set(self._timestamps.keys())
         for expired_key in timestamp_keys - cache_keys:
             del self._timestamps[expired_key]
-    
+
     def get(self, key: K, default: Optional[V] = None) -> Optional[V]:
         """Get value with lazy expiration cleanup."""
         import time
-        
+
         # Perform lazy cleanup if needed
         if self._should_cleanup():
             self._perform_lazy_cleanup()
-        
+
         if key in self._cache:
             # Quick check: if key exists and we just cleaned up, it's valid
             # Only check individual expiration if it's been a while since cleanup
             current_time = time.time()
-            if (current_time - self._last_cleanup_time > self._cleanup_interval / 2 and 
+            if (current_time - self._last_cleanup_time > self._cleanup_interval / 2 and
                 key in self._timestamps):
                 age = current_time - self._timestamps[key]
                 if age > self.ttl_seconds:
                     # Expired - remove from cache
                     self.delete(key)
                     return default
-            
+
             # Not expired - update LRU and return
             if key in self._timestamps:
                 self._timestamps.move_to_end(key)
             return super().get(key, default)
-        
+
         return default
-    
+
     def _should_cleanup(self) -> bool:
         """Check if lazy cleanup should be performed."""
         import time
         current_time = time.time()
         return (current_time - self._last_cleanup_time) >= self._cleanup_interval
-    
+
     def _perform_lazy_cleanup(self) -> None:
         """Perform lazy cleanup of expired entries."""
         import time
         self._last_cleanup_time = time.time()
         self.cleanup_expired()
-    
+
     def delete(self, key: K) -> bool:
         """Delete key and its timestamp."""
         result = super().delete(key)
         if key in self._timestamps:
             del self._timestamps[key]
         return result
-    
+
     def clear(self) -> None:
         """Clear cache and timestamps."""
         super().clear()
         self._timestamps.clear()
-    
+
     def cleanup_expired(self) -> int:
         """
         Remove all expired entries.
@@ -198,14 +198,14 @@ class TimeBoundedCache(BoundedCache[K, V]):
             Number of entries removed
         """
         import time
-        
+
         current_time = time.time()
         expired_keys = [
             key for key, timestamp in self._timestamps.items()
             if current_time - timestamp > self.ttl_seconds
         ]
-        
+
         for key in expired_keys:
             self.delete(key)
-        
+
         return len(expired_keys)

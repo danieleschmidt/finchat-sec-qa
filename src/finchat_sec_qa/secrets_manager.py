@@ -2,15 +2,14 @@
 Secure secrets management module with encryption, external providers, and audit logging.
 Provides enterprise-grade secret storage with fallback mechanisms and security features.
 """
+import base64
+from dataclasses import dataclass, field
+import hmac
+import json
+import logging
 import os
 import time
-import hmac
-import hashlib
-import logging
-from typing import Dict, Optional, List, Any
-from dataclasses import dataclass, field
-import json
-import base64
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +41,7 @@ class SecretsManager:
     - Secret rotation and versioning
     - Audit logging and caching
     """
-    
+
     def __init__(
         self,
         provider: str = 'env',
@@ -56,39 +55,39 @@ class SecretsManager:
         self.fallback_providers = fallback_providers or ['env']
         self.cache_ttl = cache_ttl
         self.provider_config = provider_config
-        
+
         # Secret cache with TTL
         self._cache: Dict[str, Dict[str, Any]] = {}
-        
+
         # Local encrypted storage
         self._local_storage: Dict[str, Dict[str, Any]] = {}
-        
+
         # Encryption setup
         if encryption_key:
             self._validate_encryption_key(encryption_key)
             self.encryption_key = encryption_key.encode('utf-8')
         else:
             self.encryption_key = None
-        
+
         # Initialize provider clients
         self._init_providers()
-    
+
     def _validate_encryption_key(self, key: str) -> None:
         """Validate encryption key strength."""
         if len(key.encode('utf-8')) < 32:
             raise ValueError("Encryption key must be at least 32 bytes long")
-    
+
     def _init_providers(self) -> None:
         """Initialize external provider clients."""
         self._aws_client = None
         self._vault_session = None
-        
+
         if self.provider == 'aws' or 'aws' in self.fallback_providers:
             self._init_aws()
-        
+
         if self.provider == 'vault' or 'vault' in self.fallback_providers:
             self._init_vault()
-    
+
     def _init_aws(self) -> None:
         """Initialize AWS Secrets Manager client."""
         try:
@@ -102,25 +101,25 @@ class SecretsManager:
             logger.warning("boto3 not available, AWS Secrets Manager disabled")
         except Exception as e:
             logger.warning(f"Failed to initialize AWS client: {e}")
-    
+
     def _init_vault(self) -> None:
         """Initialize HashiCorp Vault session."""
         try:
             import requests
             self._vault_session = requests.Session()
-            
+
             vault_token = self.provider_config.get('vault_token')
             if vault_token:
                 self._vault_session.headers.update({
                     'X-Vault-Token': vault_token
                 })
-            
+
             logger.info("Initialized HashiCorp Vault session")
         except ImportError:
             logger.warning("requests not available, Vault integration disabled")
         except Exception as e:
             logger.warning(f"Failed to initialize Vault session: {e}")
-    
+
     def get_secret(
         self,
         secret_name: str,
@@ -151,25 +150,25 @@ class SecretsManager:
                 self._audit_secret_access(secret_name, 'cache_hit')
                 cached_entry['metadata'].last_accessed = time.time()
                 cached_entry['metadata'].access_count += 1
-                
+
                 secret_value = cached_entry['value']
                 if field and isinstance(secret_value, dict):
                     secret_value = secret_value.get(field, '')
-                
+
                 if auto_cleanup:
                     del self._cache[cache_key]
-                
+
                 return secret_value
-        
+
         # Try providers in order
         providers_to_try = [self.provider] + self.fallback_providers
-        
+
         for provider in providers_to_try:
             try:
                 secret_value = self._get_secret_from_provider(
                     provider, secret_name, version, field
                 )
-                
+
                 # Cache the result
                 metadata = SecretMetadata(version=version or 1)
                 self._cache[cache_key] = {
@@ -177,22 +176,22 @@ class SecretsManager:
                     'timestamp': time.time(),
                     'metadata': metadata
                 }
-                
+
                 self._audit_secret_access(secret_name, provider)
-                
+
                 if auto_cleanup:
                     # Schedule cleanup (in production, use proper cleanup mechanism)
                     pass
-                
+
                 return secret_value
-                
+
             except Exception as e:
                 logger.debug(f"Provider {provider} failed for {secret_name}: {e}")
                 continue
-        
+
         # No provider succeeded
         raise SecretNotFoundError(f"Secret '{secret_name}' not found in any provider")
-    
+
     def _get_secret_from_provider(
         self,
         provider: str,
@@ -211,21 +210,21 @@ class SecretsManager:
             return self._get_from_vault(secret_name, field)
         else:
             raise ValueError(f"Unknown provider: {provider}")
-    
+
     def _get_from_environment(self, secret_name: str) -> str:
         """Get secret from environment variables."""
         value = os.getenv(secret_name)
         if value is None:
             raise SecretNotFoundError(f"Environment variable {secret_name} not found")
         return value
-    
+
     def _get_from_local_storage(self, secret_name: str, version: Optional[int] = None) -> str:
         """Get secret from encrypted local storage."""
         if secret_name not in self._local_storage:
             raise SecretNotFoundError(f"Local secret {secret_name} not found")
-        
+
         secret_data = self._local_storage[secret_name]
-        
+
         if version:
             version_key = f"v{version}"
             if version_key not in secret_data:
@@ -237,47 +236,47 @@ class SecretsManager:
                 int(k[1:]) for k in secret_data.keys() if k.startswith('v')
             )
             encrypted_value = secret_data[f"v{latest_version}"]
-        
+
         return self._decrypt_value(encrypted_value)
-    
+
     def _get_from_aws(self, secret_name: str, version: Optional[int] = None, field: Optional[str] = None) -> str:
         """Get secret from AWS Secrets Manager."""
         if not self._aws_client:
             raise Exception("AWS client not initialized")
-        
+
         kwargs = {'SecretId': secret_name}
         if version:
             kwargs['VersionStage'] = f'AWSPENDING{version}'
-        
+
         response = self._aws_client.get_secret_value(**kwargs)
         secret_string = response['SecretString']
-        
+
         if field:
             secret_data = json.loads(secret_string)
             return secret_data.get(field, '')
-        
+
         return secret_string
-    
+
     def _get_from_vault(self, secret_name: str, field: Optional[str] = None) -> str:
         """Get secret from HashiCorp Vault."""
         if not self._vault_session:
             raise Exception("Vault session not initialized")
-        
+
         vault_url = self.provider_config.get('vault_url', 'http://localhost:8200')
         url = f"{vault_url}/v1/{secret_name}"
-        
+
         response = self._vault_session.get(url)
         response.raise_for_status()
-        
+
         data = response.json()
         secret_data = data['data']['data']
-        
+
         if field:
             return secret_data.get(field, '')
-        
+
         # Return first value if no field specified
         return list(secret_data.values())[0] if secret_data else ''
-    
+
     def store_secret(
         self,
         secret_name: str,
@@ -288,35 +287,35 @@ class SecretsManager:
         """Store secret in local encrypted storage."""
         if not self.encryption_key:
             raise ValueError("Encryption key required for storing secrets")
-        
+
         encrypted_value = self._encrypt_value(secret_value)
-        
+
         if secret_name not in self._local_storage:
             self._local_storage[secret_name] = {}
-        
+
         version_key = f"v{version}"
         self._local_storage[secret_name][version_key] = encrypted_value
-        
+
         # Store metadata
         metadata = SecretMetadata(version=version, tags=tags or {})
         self._local_storage[secret_name]['metadata'] = metadata
-        
+
         self._audit_secret_access(secret_name, 'stored')
-    
+
     def rotate_secret(self, secret_name: str, new_value: str, version: int) -> None:
         """Rotate secret to new version."""
         self.store_secret(secret_name, new_value, version)
-        
+
         # Invalidate cache
         cache_keys_to_remove = [
-            key for key in self._cache.keys() 
+            key for key in self._cache.keys()
             if key.startswith(f"{secret_name}:")
         ]
         for key in cache_keys_to_remove:
             del self._cache[key]
-        
+
         logger.info(f"Rotated secret {secret_name} to version {version}")
-    
+
     def verify_secret(self, secret_name: str, provided_value: str) -> bool:
         """Verify provided value against stored secret (constant-time comparison)."""
         # Always attempt to get the secret to maintain consistent timing
@@ -326,29 +325,30 @@ class SecretsManager:
         except SecretNotFoundError:
             # Use a consistent dummy value to maintain timing characteristics
             actual_value = 'dummy_secret_value_' + 'x' * max(0, len(provided_value) - 19)
-        
+
         # Always perform comparison with consistent timing regardless of secret existence
         return hmac.compare_digest(actual_value.encode('utf-8'), provided_value.encode('utf-8'))
-    
+
     def _encrypt_value(self, value: str) -> str:
         """Encrypt secret value using AES-GCM authenticated encryption."""
         if not self.encryption_key:
             raise ValueError("No encryption key configured")
-        
+
         try:
-            from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-            from cryptography.hazmat.primitives import hashes
-            from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
             import os
+
+            from cryptography.hazmat.primitives import hashes
+            from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+            from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
         except ImportError as e:
             raise ImportError(
                 "AES-GCM encryption requires the cryptography library. "
                 "Install with: pip install cryptography"
             ) from e
-        
+
         # Generate random 12-byte IV for AES-GCM
         iv = os.urandom(12)
-        
+
         # Derive AES key from provided key using PBKDF2
         # Use a fixed salt for backward compatibility (in production, use per-secret salt)
         salt = b'finchat_secrets_salt_v1'
@@ -359,57 +359,57 @@ class SecretsManager:
             iterations=100000,  # Recommended minimum
         )
         derived_key = kdf.derive(self.encryption_key)
-        
+
         # Encrypt with AES-GCM
         aesgcm = AESGCM(derived_key)
         value_bytes = value.encode('utf-8')
-        
+
         # Additional authenticated data (version info for future upgrades)
         aad = b'finchat_secrets_v2'
         ciphertext = aesgcm.encrypt(iv, value_bytes, aad)
-        
+
         # Format: version(2) + IV(12) + ciphertext_with_tag(variable)
         version_prefix = b'v2'
         encrypted_data = version_prefix + iv + ciphertext
-        
+
         return base64.b64encode(encrypted_data).decode('ascii')
-    
+
     def _decrypt_value(self, encrypted_value: str) -> str:
         """Decrypt secret value with format detection and backward compatibility."""
         if not self.encryption_key:
             raise ValueError("No encryption key configured")
-        
+
         try:
             encrypted_bytes = base64.b64decode(encrypted_value.encode('ascii'))
-            
+
             # Check for version prefix to determine format
             if encrypted_bytes.startswith(b'v2'):
                 return self._decrypt_value_v2(encrypted_bytes)
             else:
                 # Legacy data not supported - only v2 format accepted
                 raise ValueError("Unsupported encryption format. Only v2 (AES-GCM) format is supported.")
-                
+
         except Exception as e:
             # Constant-time error handling to prevent timing attacks
             import time
             time.sleep(0.001)  # Small constant delay
             raise ValueError("Failed to decrypt secret value") from e
-    
+
     def _decrypt_value_v2(self, encrypted_bytes: bytes) -> str:
         """Decrypt AES-GCM encrypted value (v2 format)."""
         try:
-            from cryptography.hazmat.primitives.ciphers.aead import AESGCM
             from cryptography.hazmat.primitives import hashes
+            from cryptography.hazmat.primitives.ciphers.aead import AESGCM
             from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-            
+
             # Extract components: version(2) + IV(12) + ciphertext_with_tag
             if len(encrypted_bytes) < 2 + 12 + 16:  # version + IV + min ciphertext + tag
                 raise ValueError("Invalid encrypted data format")
-            
+
             version_prefix = encrypted_bytes[:2]
             iv = encrypted_bytes[2:14]
             ciphertext = encrypted_bytes[14:]
-            
+
             # Derive AES key using same parameters as encryption
             salt = b'finchat_secrets_salt_v1'
             kdf = PBKDF2HMAC(
@@ -419,18 +419,18 @@ class SecretsManager:
                 iterations=100000,
             )
             derived_key = kdf.derive(self.encryption_key)
-            
+
             # Decrypt with AES-GCM
             aesgcm = AESGCM(derived_key)
             aad = b'finchat_secrets_v2'
             decrypted_bytes = aesgcm.decrypt(iv, ciphertext, aad)
-            
+
             return decrypted_bytes.decode('utf-8')
-            
+
         except ImportError:
             raise ValueError("Cryptography library required for v2 format decryption")
-    
-    
+
+
     def _audit_secret_access(self, secret_name: str, source: str) -> None:
         """Log secret access for audit purposes (without revealing the value)."""
         logger.info(

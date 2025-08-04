@@ -1,9 +1,8 @@
 """Secure file operations to prevent path traversal and other file-based attacks."""
 
-import os
 import logging
 from pathlib import Path
-from typing import List, Union, Optional
+from typing import List, Optional, Union
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +20,7 @@ def get_allowed_directories() -> List[Path]:
 
 
 def validate_file_path(
-    file_path: Union[str, Path], 
+    file_path: Union[str, Path],
     allowed_dirs: Optional[List[Path]] = None
 ) -> Path:
     """Validate that a file path is safe and within allowed directories.
@@ -38,13 +37,13 @@ def validate_file_path(
     """
     if allowed_dirs is None:
         allowed_dirs = get_allowed_directories()
-    
+
     # Convert to Path and resolve to normalize
     try:
         path = Path(file_path).resolve()
     except (OSError, ValueError) as e:
         raise ValueError(f"Invalid path: {e}")
-    
+
     # Check for absolute paths outside allowed areas
     if path.is_absolute():
         # Check if path is within any allowed directory
@@ -59,44 +58,44 @@ def validate_file_path(
             except ValueError:
                 # path is not relative to this allowed_dir, continue checking
                 continue
-        
+
         if not path_allowed:
             raise ValueError(f"Path not in allowed directories: {path}")
     else:
         # Relative paths - resolve against first allowed directory
         if not allowed_dirs:
             raise ValueError("No allowed directories specified for relative path")
-        
+
         base_dir = allowed_dirs[0].resolve()
         path = (base_dir / file_path).resolve()
-        
+
         # Ensure resolved path is still within the base directory
         try:
             path.relative_to(base_dir)
         except ValueError:
             raise ValueError(f"Path traversal detected: {file_path} resolves outside allowed directory")
-    
+
     # Additional security checks
     path_str = str(path)
-    
+
     # Check for suspicious patterns
     suspicious_patterns = [
         '../', '/etc/', '/proc/', '/sys/', '/dev/', '/var/log/',
         'C:\\Windows\\', 'C:\\System32\\', '\\Windows\\', '\\System32\\',
         '~/', '$HOME', '%USERPROFILE%'
     ]
-    
+
     for pattern in suspicious_patterns:
         if pattern in path_str:
             logger.error("Blocked suspicious path pattern: %s in %s", pattern, path_str)
             raise ValueError(f"Suspicious path pattern detected: {pattern} in {path_str}")
-    
+
     # Check if it's a symbolic link (potential symlink attack)
     if path.exists() and path.is_symlink():
         # Resolve the symlink and check if target is in allowed directories
         target = path.readlink()
         if target.is_absolute():
-            # Check if symlink target is in allowed directories  
+            # Check if symlink target is in allowed directories
             target_allowed = False
             for allowed_dir in allowed_dirs:
                 try:
@@ -105,15 +104,15 @@ def validate_file_path(
                     break
                 except ValueError:
                     continue
-            
+
             if not target_allowed:
                 raise ValueError(f"Symbolic link target not in allowed directories: {target}")
-    
+
     return path
 
 
 def safe_read_file(
-    file_path: Union[str, Path], 
+    file_path: Union[str, Path],
     allowed_dirs: Optional[List[Path]] = None,
     encoding: str = 'utf-8'
 ) -> str:
@@ -135,21 +134,21 @@ def safe_read_file(
     """
     # Validate the path first
     validated_path = validate_file_path(file_path, allowed_dirs)
-    
+
     try:
         # Read the file
         content = validated_path.read_text(encoding=encoding)
         logger.debug("Successfully read file: %s (%d chars)", validated_path, len(content))
         return content
-        
+
     except FileNotFoundError:
         logger.error("File not found: %s", validated_path)
         raise
-        
+
     except PermissionError:
         logger.error("Permission denied reading file: %s", validated_path)
         raise
-        
+
     except UnicodeDecodeError as e:
         logger.error("Encoding error reading file %s: %s", validated_path, e)
         raise
@@ -176,19 +175,19 @@ def safe_write_file(
     """
     # Validate the path first
     validated_path = validate_file_path(file_path, allowed_dirs)
-    
+
     # Ensure parent directory exists
     validated_path.parent.mkdir(parents=True, exist_ok=True)
-    
+
     try:
         # Write the file
         validated_path.write_text(content, encoding=encoding)
         logger.debug("Successfully wrote file: %s (%d chars)", validated_path, len(content))
-        
+
     except PermissionError:
         logger.error("Permission denied writing file: %s", validated_path)
         raise
-        
+
     except OSError as e:
         logger.error("Error writing file %s: %s", validated_path, e)
         raise

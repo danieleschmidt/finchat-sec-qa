@@ -5,7 +5,8 @@ when using the FinChat SDK.
 """
 from __future__ import annotations
 
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
+
 import httpx
 
 
@@ -17,7 +18,7 @@ class FinChatAPIError(Exception):
         status_code: HTTP status code (if applicable)
         response_data: Response data from the API (if available)
     """
-    
+
     def __init__(
         self,
         message: str,
@@ -28,13 +29,13 @@ class FinChatAPIError(Exception):
         self.message = message
         self.status_code = status_code
         self.response_data = response_data or {}
-    
+
     def __str__(self) -> str:
         """String representation of the error."""
         if self.status_code:
             return f"FinChat API Error {self.status_code}: {self.message}"
         return f"FinChat API Error: {self.message}"
-    
+
     @classmethod
     def from_response(cls, response: httpx.Response) -> FinChatAPIError:
         """Create exception from HTTP response."""
@@ -44,7 +45,7 @@ class FinChatAPIError(Exception):
         except (ValueError, KeyError):
             message = f"HTTP {response.status_code}"
             response_data = {}
-        
+
         # Return specific exception types based on status code
         if response.status_code == 400:
             return FinChatValidationError(message, response.status_code, response_data)
@@ -88,11 +89,11 @@ class FinChatConnectionError(FinChatAPIError):
     This typically indicates network connectivity issues or that the
     FinChat service is unavailable.
     """
-    
+
     def __init__(self, message: str, original_exception: Optional[Exception] = None) -> None:
         super().__init__(message)
         self.original_exception = original_exception
-    
+
     @classmethod
     def from_httpx_error(cls, error: httpx.RequestError) -> FinChatConnectionError:
         """Create connection error from httpx RequestError."""

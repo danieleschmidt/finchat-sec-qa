@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from pathlib import Path
 import logging
+from pathlib import Path
 
 from finchat_sec_qa.edgar_client import EdgarClient, FilingMetadata
 from finchat_sec_qa.qa_engine import FinancialQAEngine

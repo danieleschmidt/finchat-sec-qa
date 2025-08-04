@@ -30,34 +30,34 @@ Example usage:
         print(f"Answer: {result.answer}")
 """
 
-from .client import FinChatClient, AsyncFinChatClient
-from .models import (
-    QueryResponse,
-    RiskAnalysisResponse, 
-    HealthCheckResponse,
-    Citation,
-)
+from .client import AsyncFinChatClient, FinChatClient
 from .exceptions import (
     FinChatAPIError,
-    FinChatValidationError,
     FinChatNotFoundError,
     FinChatTimeoutError,
+    FinChatValidationError,
+)
+from .models import (
+    Citation,
+    HealthCheckResponse,
+    QueryResponse,
+    RiskAnalysisResponse,
 )
 
 __all__ = [
     # Clients
     "FinChatClient",
     "AsyncFinChatClient",
-    
+
     # Response models
     "QueryResponse",
     "RiskAnalysisResponse",
     "HealthCheckResponse",
     "Citation",
-    
+
     # Exceptions
     "FinChatAPIError",
-    "FinChatValidationError", 
+    "FinChatValidationError",
     "FinChatNotFoundError",
     "FinChatTimeoutError",
 ]
