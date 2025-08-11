@@ -1,0 +1,413 @@
+version: '3.8'
+
+services:
+  # Main API Service
+  finchat-api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.api
+      target: production
+    container_name: finchat-api-prod
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=production
+      - LOG_LEVEL=INFO
+      - WORKERS=4
+      - MAX_REQUESTS=1000
+      - MAX_REQUESTS_JITTER=50
+      - TIMEOUT=120
+    env_file:
+      - .env.production
+    volumes:
+      - finchat_cache:/app/cache
+      - finchat_logs:/app/logs
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - finchat-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '2.0'
+        reservations:
+          memory: 1G
+          cpus: '1.0'
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.finchat-api.rule=Host(`api.finchat.com`)"
+      - "traefik.http.routers.finchat-api.tls.certresolver=letsencrypt"
+      - "traefik.http.services.finchat-api.loadbalancer.server.port=8000"
+
+  # Web Application
+  finchat-webapp:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.webapp
+      target: production
+    container_name: finchat-webapp-prod
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - ENVIRONMENT=production
+      - LOG_LEVEL=INFO
+      - WORKERS=2
+    env_file:
+      - .env.production
+    volumes:
+      - finchat_logs:/app/logs
+    depends_on:
+      - finchat-api
+      - redis
+    networks:
+      - finchat-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.finchat-webapp.rule=Host(`app.finchat.com`)"
+      - "traefik.http.routers.finchat-webapp.tls.certresolver=letsencrypt"
+      - "traefik.http.services.finchat-webapp.loadbalancer.server.port=5000"
+
+  # Redis Cache
+  redis:
+    image: redis:7.2-alpine
+    container_name: finchat-redis-prod
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    command: >
+      redis-server 
+      --requirepass ${REDIS_PASSWORD}
+      --maxmemory 1gb
+      --maxmemory-policy allkeys-lru
+      --appendonly yes
+      --appendfsync everysec
+    volumes:
+      - redis_data:/data
+      - ../docker/redis.conf:/etc/redis/redis.conf
+    networks:
+      - finchat-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+        reservations:
+          memory: 512M
+          cpus: '0.25'
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15.4-alpine
+    container_name: finchat-postgres-prod
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../docker/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - finchat-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+        reservations:
+          memory: 1G
+          cpus: '0.5'
+
+  # Prometheus Monitoring
+  prometheus:
+    image: prom/prometheus:v2.47.0
+    container_name: finchat-prometheus-prod
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--storage.tsdb.retention.size=10GB'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+    volumes:
+      - ../docker/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      - finchat-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+        reservations:
+          memory: 1G
+          cpus: '0.5'
+
+  # Grafana Dashboard
+  grafana:
+    image: grafana/grafana:10.1.0
+    container_name: finchat-grafana-prod
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SECURITY_DISABLE_GRAVATAR=true
+      - GF_ANALYTICS_REPORTING_ENABLED=false
+      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ../docs/monitoring/grafana-dashboard.json:/etc/grafana/provisioning/dashboards/dashboard.json
+      - ../docker/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+    networks:
+      - finchat-network
+    depends_on:
+      - prometheus
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+        reservations:
+          memory: 512M
+          cpus: '0.25'
+
+  # Reverse Proxy and SSL Termination
+  traefik:
+    image: traefik:v3.0
+    container_name: finchat-traefik-prod
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"  # Dashboard
+    command:
+      - --api.dashboard=true
+      - --api.insecure=true
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --certificatesresolvers.letsencrypt.acme.tlschallenge=true
+      - --certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}
+      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+      - --log.level=INFO
+      - --accesslog=true
+      - --metrics.prometheus=true
+      - --metrics.prometheus.buckets=0.1,0.3,1.2,5.0
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - letsencrypt_data:/letsencrypt
+    networks:
+      - finchat-network
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+
+  # Log Aggregation
+  loki:
+    image: grafana/loki:2.9.0
+    container_name: finchat-loki-prod
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - loki_data:/loki
+      - ../docker/loki-config.yaml:/etc/loki/local-config.yaml
+    networks:
+      - finchat-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3100/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+        reservations:
+          memory: 512M
+          cpus: '0.25'
+
+  # Vector Log Collector
+  vector:
+    image: timberio/vector:0.33.0-alpine
+    container_name: finchat-vector-prod
+    restart: unless-stopped
+    volumes:
+      - /var/log:/var/log:ro
+      - finchat_logs:/app/logs:ro
+      - ../docker/vector.toml:/etc/vector/vector.toml
+    networks:
+      - finchat-network
+    depends_on:
+      - loki
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.25'
+        reservations:
+          memory: 128M
+          cpus: '0.1'
+
+  # Backup Service
+  backup:
+    image: alpine:3.18
+    container_name: finchat-backup-prod
+    restart: unless-stopped
+    environment:
+      - BACKUP_SCHEDULE=0 2 * * *  # Daily at 2 AM
+      - S3_BUCKET=${BACKUP_S3_BUCKET}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+    volumes:
+      - postgres_data:/backup/postgres:ro
+      - redis_data:/backup/redis:ro
+      - finchat_cache:/backup/cache:ro
+      - ../scripts/backup.sh:/usr/local/bin/backup.sh
+    command: |
+      sh -c "
+        apk add --no-cache dcron aws-cli postgresql-client redis &&
+        echo '${BACKUP_SCHEDULE} /usr/local/bin/backup.sh' | crontab - &&
+        crond -f -l 2
+      "
+    networks:
+      - finchat-network
+    depends_on:
+      - postgres
+      - redis
+
+networks:
+  finchat-network:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: finchat-br0
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/finchat/data/postgres
+  
+  redis_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/finchat/data/redis
+  
+  prometheus_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/finchat/data/prometheus
+  
+  grafana_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/finchat/data/grafana
+  
+  loki_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/finchat/data/loki
+  
+  letsencrypt_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/finchat/data/letsencrypt
+  
+  finchat_cache:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/finchat/cache
+  
+  finchat_logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/finchat/logs
