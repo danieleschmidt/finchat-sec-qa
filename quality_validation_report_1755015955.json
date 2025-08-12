@@ -1,0 +1,258 @@
+{
+  "timestamp": "2025-08-12T16:25:54.834013+00:00",
+  "overall_status": "warning",
+  "gates": {
+    "code_syntax": {
+      "status": "passed",
+      "checks": [
+        "\u2705 Syntax valid: src/finchat/__init__.py",
+        "\u2705 Syntax valid: src/finchat/agent.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/__init__.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/adaptive_learning.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/auto_scaling.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/autonomous_value_engine.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/circuit_breaker.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/citation.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/cli.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/comprehensive_monitoring.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/config.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/edgar_client.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/edgar_validation.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/file_security.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/global_first_implementation.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/health.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/i18n.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/intelligent_cache.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/logging_utils.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/metrics.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/multi_company.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/performance_optimization.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/photonic_api.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/photonic_bridge.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/photonic_cache.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/photonic_continuous_variables.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/photonic_mlir.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/photonic_mlir_synthesizer.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/qa_engine.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/quantum_benchmarks.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/quantum_enhanced_scaling.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/quantum_monitoring.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/quantum_portfolio.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/quantum_risk_ml.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/quantum_timeseries.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/query_handler.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/rate_limiting.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/risk_intelligence.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/robust_error_handling.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/secrets_manager.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/server.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/utils.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/validation.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/voice_interface.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/webapp.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/sdk/__init__.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/sdk/client.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/sdk/exceptions.py",
+        "\u2705 Syntax valid: src/finchat_sec_qa/sdk/models.py",
+        "\u2705 Proper package initialization"
+      ],
+      "errors": [
+        "\u26a0\ufe0f High complexity function: comprehensive_monitoring.py:_system_health_check (complexity: 12)",
+        "\u26a0\ufe0f High complexity function: config.py:_validate (complexity: 18)",
+        "\u26a0\ufe0f High complexity function: edgar_client.py:get_recent_filings (complexity: 14)",
+        "\u26a0\ufe0f High complexity function: file_security.py:validate_file_path (complexity: 21)",
+        "\u26a0\ufe0f High complexity function: performance_optimization.py:_apply_optimization (complexity: 16)"
+      ]
+    },
+    "security_standards": {
+      "status": "failed",
+      "checks": [
+        "\u2705 input_validation: 3 implementations found",
+        "\u2705 authentication: 3 implementations found",
+        "\u2705 encryption: 3 implementations found",
+        "\u2705 security_headers: 3 implementations found",
+        "\u2705 rate_limiting: 2 implementations found",
+        "\u2705 Secrets management system implemented"
+      ],
+      "errors": [
+        "Potential vulnerability in /root/repo/src/finchat_sec_qa/adaptive_learning.py:535 - open(state_file, 'w'",
+        "Potential vulnerability in /root/repo/src/finchat_sec_qa/autonomous_value_engine.py:549 - open(state_file, 'w'",
+        "Potential vulnerability in /root/repo/src/finchat_sec_qa/global_first_implementation.py:440 - open(localization_file, 'w'",
+        "Potential vulnerability in /root/repo/src/finchat_sec_qa/health.py:110 - open(test_file, 'w'",
+        "Potential vulnerability in /root/repo/src/finchat_sec_qa/rate_limiting.py:123 - eval(",
+        "Potential vulnerability in /root/repo/src/finchat_sec_qa/robust_error_handling.py:234 - eval("
+      ],
+      "security_features": [
+        "validate_ticker",
+        "validate_text_safety",
+        "validate_accession_number",
+        "SECRET_TOKEN",
+        "authentication_attempts_total",
+        "MIN_TOKEN_LENGTH",
+        "cryptography",
+        "secrets_manager",
+        "encryption_key",
+        "SecurityHeadersMiddleware",
+        "X-Content-Type-Options",
+        "HSTS",
+        "rate_limiting",
+        "RATE_LIMIT_MAX_REQUESTS"
+      ]
+    },
+    "performance_requirements": {
+      "status": "passed",
+      "checks": [
+        "\u2705 caching: 4 implementations",
+        "\u2705 async_operations: 4 implementations",
+        "\u2705 connection_pooling: 3 implementations",
+        "\u2705 metrics_collection: 4 implementations",
+        "\u2705 optimization: 3 implementations",
+        "\u2705 Response time monitoring: 4 features",
+        "\u2705 Auto-scaling system implemented"
+      ],
+      "errors": [],
+      "performance_features": [
+        "IntelligentCache",
+        "CachePolicy",
+        "cached",
+        "cache_operations_total",
+        "async def",
+        "asyncio",
+        "await",
+        "AsyncQueryHandler",
+        "ConnectionPool",
+        "httpx.AsyncClient",
+        "pool_max_connections",
+        "prometheus_client",
+        "Histogram",
+        "Counter",
+        "Gauge",
+        "ThreadPoolExecutor",
+        "ProcessPoolExecutor",
+        "concurrent.futures"
+      ]
+    },
+    "reliability_features": {
+      "status": "passed",
+      "checks": [
+        "\u2705 circuit_breaker: 3 implementations",
+        "\u2705 retry_logic: 4 implementations",
+        "\u2705 health_checks: 4 implementations",
+        "\u2705 error_handling: 3 implementations",
+        "\u2705 graceful_shutdown: 4 implementations",
+        "\u2705 timeout_handling: 3 implementations",
+        "\u2705 Error handling coverage: 77.6%"
+      ],
+      "errors": [],
+      "reliability_features": [
+        "CircuitBreaker",
+        "CircuitState",
+        "failure_threshold",
+        "retry",
+        "backoff",
+        "exponential",
+        "max_retries",
+        "HealthChecker",
+        "health_check",
+        "readiness_probe",
+        "liveness_probe",
+        "try:",
+        "except",
+        "HTTPException",
+        "graceful",
+        "shutdown",
+        "cleanup",
+        "finally",
+        "timeout",
+        "asyncio.wait_for",
+        "TimeoutError"
+      ]
+    },
+    "scalability_design": {
+      "status": "passed",
+      "checks": [
+        "\u2705 horizontal_scaling: 3 implementations",
+        "\u2705 resource_management: 3 implementations",
+        "\u2705 caching_layers: 3 implementations",
+        "\u2705 async_processing: 3 implementations",
+        "\u2705 monitoring: 3 implementations",
+        "\u2705 Auto-scaling capabilities implemented",
+        "\u2705 Resource optimization: 1 features"
+      ],
+      "errors": [],
+      "scalability_features": [
+        "load_balancing",
+        "worker_processes",
+        "distributed",
+        "ResourcePool",
+        "ThreadPoolExecutor",
+        "ProcessPoolExecutor",
+        "cache_hit_ratio",
+        "cache_size",
+        "eviction",
+        "asyncio",
+        "concurrent.futures",
+        "background_tasks",
+        "prometheus",
+        "metrics",
+        "observability"
+      ]
+    },
+    "monitoring_capabilities": {
+      "status": "passed",
+      "checks": [
+        "\u2705 metrics_collection: 4 implementations",
+        "\u2705 health_monitoring: 3 implementations",
+        "\u2705 logging: 3 implementations",
+        "\u2705 tracing: 2 implementations",
+        "\u2705 alerting: 3 implementations",
+        "\u2705 Monitoring endpoints: 4/4 implemented",
+        "\u2705 Business metrics: 3 implemented"
+      ],
+      "errors": [],
+      "monitoring_features": [
+        "Counter",
+        "Histogram",
+        "Gauge",
+        "prometheus_client",
+        "health_check",
+        "HealthChecker",
+        "system_health",
+        "logging",
+        "logger",
+        "log_level",
+        "trace",
+        "span",
+        "alert",
+        "threshold",
+        "notification"
+      ]
+    },
+    "documentation_quality": {
+      "status": "passed",
+      "checks": [
+        "\u2705 README.md exists",
+        "\u2705 CONTRIBUTING.md exists",
+        "\u2705 CHANGELOG.md exists",
+        "\u2705 LICENSE exists",
+        "\u2705 Documentation files: 39 found",
+        "\u2705 Docstring coverage: 91.3%",
+        "\u2705 API documentation: 2 guides"
+      ],
+      "errors": [],
+      "documentation_score": 39
+    }
+  },
+  "summary": {
+    "total_gates": 7,
+    "passed_gates": 6,
+    "failed_gates": 1,
+    "total_checks_passed": 91,
+    "total_issues_found": 11,
+    "success_rate": 0.8571428571428571
+  },
+  "recommendations": [
+    "\ud83d\udd27 security_standards: Address 6 critical issues",
+    "\ud83d\udd12 Prioritize security vulnerability fixes"
+  ]
+}
