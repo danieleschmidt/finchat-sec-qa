@@ -231,7 +231,7 @@ class RobustErrorHandler:
     def _determine_recovery_strategy(self, error_context: ErrorContext) -> RecoveryStrategy:
         """Determine the best recovery strategy for the given error."""
         # Check specific mapping
-        error_key = (error_context.category, type(eval(error_context.error_type)))
+        error_key = (error_context.category, error_context.error_type)
         if error_key in self.strategy_mapping:
             return self.strategy_mapping[error_key]
         

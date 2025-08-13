@@ -1,0 +1,1060 @@
+{
+  "timestamp": "2025-08-13T22:54:28.669965",
+  "security_results": [
+    {
+      "file": "src/finchat_sec_qa/__init__.py",
+      "issues": [],
+      "warnings": [],
+      "lines_of_code": 93,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/adaptive_learning.py",
+      "issues": [],
+      "warnings": [],
+      "lines_of_code": 605,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/auto_scaling.py",
+      "issues": [],
+      "warnings": [
+        "Potentially dangerous import: os"
+      ],
+      "lines_of_code": 611,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/autonomous_value_engine.py",
+      "issues": [],
+      "warnings": [],
+      "lines_of_code": 612,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/circuit_breaker.py",
+      "issues": [],
+      "warnings": [],
+      "lines_of_code": 385,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/citation.py",
+      "issues": [],
+      "warnings": [],
+      "lines_of_code": 54,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/cli.py",
+      "issues": [],
+      "warnings": [],
+      "lines_of_code": 279,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/comprehensive_monitoring.py",
+      "issues": [],
+      "warnings": [
+        "Potentially dangerous import: os"
+      ],
+      "lines_of_code": 866,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/config.py",
+      "issues": [],
+      "warnings": [
+        "Potentially dangerous import: os"
+      ],
+      "lines_of_code": 265,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/edgar_client.py",
+      "issues": [],
+      "warnings": [],
+      "lines_of_code": 347,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/edgar_validation.py",
+      "issues": [],
+      "warnings": [],
+      "lines_of_code": 78,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/file_security.py",
+      "issues": [],
+      "warnings": [],
+      "lines_of_code": 213,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/global_first_implementation.py",
+      "issues": [],
+      "warnings": [],
+      "lines_of_code": 585,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/health.py",
+      "issues": [],
+      "warnings": [
+        "Potentially dangerous import: os"
+      ],
+      "lines_of_code": 376,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/i18n.py",
+      "issues": [],
+      "warnings": [
+        "Potentially dangerous import: os"
+      ],
+      "lines_of_code": 795,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/intelligent_cache.py",
+      "issues": [],
+      "warnings": [
+        "Potentially dangerous import: os"
+      ],
+      "lines_of_code": 862,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/logging_utils.py",
+      "issues": [],
+      "warnings": [],
+      "lines_of_code": 10,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/metrics.py",
+      "issues": [],
+      "warnings": [
+        "Potentially dangerous import: os"
+      ],
+      "lines_of_code": 716,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/multi_company.py",
+      "issues": [],
+      "warnings": [],
+      "lines_of_code": 84,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/performance_optimization.py",
+      "issues": [],
+      "warnings": [],
+      "lines_of_code": 812,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/photonic_api.py",
+      "issues": [],
+      "warnings": [],
+      "lines_of_code": 480,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/photonic_bridge.py",
+      "issues": [],
+      "warnings": [],
+      "lines_of_code": 462,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/photonic_cache.py",
+      "issues": [],
+      "warnings": [
+        "Potentially dangerous import: os"
+      ],
+      "lines_of_code": 890,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/photonic_continuous_variables.py",
+      "issues": [],
+      "warnings": [],
+      "lines_of_code": 892,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/photonic_mlir.py",
+      "issues": [],
+      "warnings": [],
+      "lines_of_code": 699,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/photonic_mlir_synthesizer.py",
+      "issues": [],
+      "warnings": [],
+      "lines_of_code": 351,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/qa_engine.py",
+      "issues": [],
+      "warnings": [],
+      "lines_of_code": 470,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/quantum_benchmarks.py",
+      "issues": [],
+      "warnings": [],
+      "lines_of_code": 1227,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/quantum_enhanced_scaling.py",
+      "issues": [],
+      "warnings": [],
+      "lines_of_code": 772,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/quantum_hybrid_optimization.py",
+      "issues": [],
+      "warnings": [],
+      "lines_of_code": 959,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/quantum_monitoring.py",
+      "issues": [],
+      "warnings": [],
+      "lines_of_code": 916,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/quantum_portfolio.py",
+      "issues": [],
+      "warnings": [],
+      "lines_of_code": 1025,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/quantum_risk_ml.py",
+      "issues": [],
+      "warnings": [],
+      "lines_of_code": 974,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/quantum_timeseries.py",
+      "issues": [],
+      "warnings": [],
+      "lines_of_code": 658,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/query_handler.py",
+      "issues": [],
+      "warnings": [],
+      "lines_of_code": 275,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/rate_limiting.py",
+      "issues": [],
+      "warnings": [],
+      "lines_of_code": 227,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/risk_intelligence.py",
+      "issues": [],
+      "warnings": [],
+      "lines_of_code": 38,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/robust_error_handling.py",
+      "issues": [
+        "Dangerous function used: eval"
+      ],
+      "warnings": [],
+      "lines_of_code": 790,
+      "secure": false
+    },
+    {
+      "file": "src/finchat_sec_qa/secrets_manager.py",
+      "issues": [],
+      "warnings": [
+        "Potentially dangerous import: os",
+        "Potentially dangerous import: os"
+      ],
+      "lines_of_code": 450,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/server.py",
+      "issues": [],
+      "warnings": [],
+      "lines_of_code": 683,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/utils.py",
+      "issues": [],
+      "warnings": [],
+      "lines_of_code": 211,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/validation.py",
+      "issues": [],
+      "warnings": [],
+      "lines_of_code": 85,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/voice_interface.py",
+      "issues": [],
+      "warnings": [],
+      "lines_of_code": 25,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/webapp.py",
+      "issues": [],
+      "warnings": [
+        "Potentially dangerous import: os"
+      ],
+      "lines_of_code": 434,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/sdk/__init__.py",
+      "issues": [],
+      "warnings": [],
+      "lines_of_code": 63,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/sdk/client.py",
+      "issues": [],
+      "warnings": [],
+      "lines_of_code": 445,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/sdk/exceptions.py",
+      "issues": [],
+      "warnings": [],
+      "lines_of_code": 112,
+      "secure": true
+    },
+    {
+      "file": "src/finchat_sec_qa/sdk/models.py",
+      "issues": [],
+      "warnings": [],
+      "lines_of_code": 197,
+      "secure": true
+    }
+  ],
+  "quality_results": [
+    {
+      "file": "src/finchat_sec_qa/__init__.py",
+      "total_lines": 93,
+      "code_lines": 85,
+      "comment_lines": 6,
+      "comment_ratio": 0.06451612903225806,
+      "functions": 0,
+      "classes": 0,
+      "complexity_score": 0,
+      "docstring_coverage": 0,
+      "quality_score": 54.677419354838705
+    },
+    {
+      "file": "src/finchat_sec_qa/adaptive_learning.py",
+      "total_lines": 605,
+      "code_lines": 479,
+      "comment_lines": 47,
+      "comment_ratio": 0.07768595041322314,
+      "functions": 31,
+      "classes": 4,
+      "complexity_score": 41,
+      "docstring_coverage": 0.8571428571428571,
+      "quality_score": 86.97086491221388
+    },
+    {
+      "file": "src/finchat_sec_qa/auto_scaling.py",
+      "total_lines": 611,
+      "code_lines": 504,
+      "comment_lines": 40,
+      "comment_ratio": 0.06546644844517185,
+      "functions": 14,
+      "classes": 5,
+      "complexity_score": 25,
+      "docstring_coverage": 0.9473684210526315,
+      "quality_score": 87.35756125173819
+    },
+    {
+      "file": "src/finchat_sec_qa/autonomous_value_engine.py",
+      "total_lines": 612,
+      "code_lines": 510,
+      "comment_lines": 40,
+      "comment_ratio": 0.06535947712418301,
+      "functions": 29,
+      "classes": 4,
+      "complexity_score": 49,
+      "docstring_coverage": 0.9696969696969697,
+      "quality_score": 88.52283483926486
+    },
+    {
+      "file": "src/finchat_sec_qa/circuit_breaker.py",
+      "total_lines": 385,
+      "code_lines": 306,
+      "comment_lines": 21,
+      "comment_ratio": 0.05454545454545454,
+      "functions": 12,
+      "classes": 6,
+      "complexity_score": 9,
+      "docstring_coverage": 0.7777777777777778,
+      "quality_score": 82.04292929292929
+    },
+    {
+      "file": "src/finchat_sec_qa/citation.py",
+      "total_lines": 54,
+      "code_lines": 46,
+      "comment_lines": 0,
+      "comment_ratio": 0.0,
+      "functions": 2,
+      "classes": 1,
+      "complexity_score": 6,
+      "docstring_coverage": 0.6666666666666666,
+      "quality_score": 62.66666666666667
+    },
+    {
+      "file": "src/finchat_sec_qa/cli.py",
+      "total_lines": 279,
+      "code_lines": 229,
+      "comment_lines": 10,
+      "comment_ratio": 0.035842293906810034,
+      "functions": 8,
+      "classes": 0,
+      "complexity_score": 21,
+      "docstring_coverage": 0.375,
+      "quality_score": 57.50134408602151
+    },
+    {
+      "file": "src/finchat_sec_qa/comprehensive_monitoring.py",
+      "total_lines": 866,
+      "code_lines": 717,
+      "comment_lines": 53,
+      "comment_ratio": 0.061200923787528866,
+      "functions": 37,
+      "classes": 7,
+      "complexity_score": 69,
+      "docstring_coverage": 0.9772727272727273,
+      "quality_score": 87.67645306444382
+    },
+    {
+      "file": "src/finchat_sec_qa/config.py",
+      "total_lines": 265,
+      "code_lines": 215,
+      "comment_lines": 22,
+      "comment_ratio": 0.0830188679245283,
+      "functions": 9,
+      "classes": 1,
+      "complexity_score": 24,
+      "docstring_coverage": 1.0,
+      "quality_score": 89.45283018867924
+    },
+    {
+      "file": "src/finchat_sec_qa/edgar_client.py",
+      "total_lines": 347,
+      "code_lines": 289,
+      "comment_lines": 15,
+      "comment_ratio": 0.043227665706051875,
+      "functions": 12,
+      "classes": 4,
+      "complexity_score": 12,
+      "docstring_coverage": 0.8125,
+      "quality_score": 80.98414985590779
+    },
+    {
+      "file": "src/finchat_sec_qa/edgar_validation.py",
+      "total_lines": 78,
+      "code_lines": 54,
+      "comment_lines": 6,
+      "comment_ratio": 0.07692307692307693,
+      "functions": 3,
+      "classes": 0,
+      "complexity_score": 6,
+      "docstring_coverage": 1.0,
+      "quality_score": 90.53846153846155
+    },
+    {
+      "file": "src/finchat_sec_qa/file_security.py",
+      "total_lines": 213,
+      "code_lines": 171,
+      "comment_lines": 17,
+      "comment_ratio": 0.07981220657276995,
+      "functions": 5,
+      "classes": 0,
+      "complexity_score": 18,
+      "docstring_coverage": 1.0,
+      "quality_score": 86.17183098591549
+    },
+    {
+      "file": "src/finchat_sec_qa/global_first_implementation.py",
+      "total_lines": 585,
+      "code_lines": 475,
+      "comment_lines": 22,
+      "comment_ratio": 0.037606837606837605,
+      "functions": 25,
+      "classes": 14,
+      "complexity_score": 38,
+      "docstring_coverage": 0.7948717948717948,
+      "quality_score": 77.87589743589743
+    },
+    {
+      "file": "src/finchat_sec_qa/health.py",
+      "total_lines": 376,
+      "code_lines": 306,
+      "comment_lines": 20,
+      "comment_ratio": 0.05319148936170213,
+      "functions": 8,
+      "classes": 2,
+      "complexity_score": 18,
+      "docstring_coverage": 0.9,
+      "quality_score": 82.2287234042553
+    },
+    {
+      "file": "src/finchat_sec_qa/i18n.py",
+      "total_lines": 795,
+      "code_lines": 701,
+      "comment_lines": 27,
+      "comment_ratio": 0.033962264150943396,
+      "functions": 24,
+      "classes": 6,
+      "complexity_score": 32,
+      "docstring_coverage": 0.9,
+      "quality_score": 82.09433962264151
+    },
+    {
+      "file": "src/finchat_sec_qa/intelligent_cache.py",
+      "total_lines": 862,
+      "code_lines": 701,
+      "comment_lines": 62,
+      "comment_ratio": 0.07192575406032482,
+      "functions": 21,
+      "classes": 5,
+      "complexity_score": 52,
+      "docstring_coverage": 0.8461538461538461,
+      "quality_score": 82.20644552663114
+    },
+    {
+      "file": "src/finchat_sec_qa/logging_utils.py",
+      "total_lines": 10,
+      "code_lines": 7,
+      "comment_lines": 0,
+      "comment_ratio": 0.0,
+      "functions": 1,
+      "classes": 0,
+      "complexity_score": 0,
+      "docstring_coverage": 1.0,
+      "quality_score": 85.0
+    },
+    {
+      "file": "src/finchat_sec_qa/metrics.py",
+      "total_lines": 716,
+      "code_lines": 587,
+      "comment_lines": 39,
+      "comment_ratio": 0.05446927374301676,
+      "functions": 21,
+      "classes": 3,
+      "complexity_score": 24,
+      "docstring_coverage": 0.7916666666666666,
+      "quality_score": 81.40848629954776
+    },
+    {
+      "file": "src/finchat_sec_qa/multi_company.py",
+      "total_lines": 84,
+      "code_lines": 62,
+      "comment_lines": 7,
+      "comment_ratio": 0.08333333333333333,
+      "functions": 2,
+      "classes": 1,
+      "complexity_score": 5,
+      "docstring_coverage": 1.0,
+      "quality_score": 90.0
+    },
+    {
+      "file": "src/finchat_sec_qa/performance_optimization.py",
+      "total_lines": 812,
+      "code_lines": 673,
+      "comment_lines": 57,
+      "comment_ratio": 0.07019704433497537,
+      "functions": 24,
+      "classes": 7,
+      "complexity_score": 69,
+      "docstring_coverage": 0.967741935483871,
+      "quality_score": 85.61423406960114
+    },
+    {
+      "file": "src/finchat_sec_qa/photonic_api.py",
+      "total_lines": 480,
+      "code_lines": 381,
+      "comment_lines": 22,
+      "comment_ratio": 0.04583333333333333,
+      "functions": 3,
+      "classes": 7,
+      "complexity_score": 9,
+      "docstring_coverage": 1.0,
+      "quality_score": 82.875
+    },
+    {
+      "file": "src/finchat_sec_qa/photonic_bridge.py",
+      "total_lines": 462,
+      "code_lines": 382,
+      "comment_lines": 22,
+      "comment_ratio": 0.047619047619047616,
+      "functions": 14,
+      "classes": 2,
+      "complexity_score": 18,
+      "docstring_coverage": 0.875,
+      "quality_score": 83.28571428571429
+    },
+    {
+      "file": "src/finchat_sec_qa/photonic_cache.py",
+      "total_lines": 890,
+      "code_lines": 719,
+      "comment_lines": 57,
+      "comment_ratio": 0.06404494382022471,
+      "functions": 35,
+      "classes": 6,
+      "complexity_score": 56,
+      "docstring_coverage": 0.8536585365853658,
+      "quality_score": 83.95308303644833
+    },
+    {
+      "file": "src/finchat_sec_qa/photonic_continuous_variables.py",
+      "total_lines": 892,
+      "code_lines": 718,
+      "comment_lines": 72,
+      "comment_ratio": 0.08071748878923767,
+      "functions": 22,
+      "classes": 9,
+      "complexity_score": 51,
+      "docstring_coverage": 1.0,
+      "quality_score": 90.1530778638402
+    },
+    {
+      "file": "src/finchat_sec_qa/photonic_mlir.py",
+      "total_lines": 699,
+      "code_lines": 573,
+      "comment_lines": 38,
+      "comment_ratio": 0.05436337625178827,
+      "functions": 24,
+      "classes": 7,
+      "complexity_score": 23,
+      "docstring_coverage": 0.8709677419354839,
+      "quality_score": 85.1182161151876
+    },
+    {
+      "file": "src/finchat_sec_qa/photonic_mlir_synthesizer.py",
+      "total_lines": 351,
+      "code_lines": 285,
+      "comment_lines": 27,
+      "comment_ratio": 0.07692307692307693,
+      "functions": 14,
+      "classes": 5,
+      "complexity_score": 20,
+      "docstring_coverage": 0.9473684210526315,
+      "quality_score": 90.14748409485252
+    },
+    {
+      "file": "src/finchat_sec_qa/qa_engine.py",
+      "total_lines": 470,
+      "code_lines": 383,
+      "comment_lines": 23,
+      "comment_ratio": 0.04893617021276596,
+      "functions": 24,
+      "classes": 2,
+      "complexity_score": 37,
+      "docstring_coverage": 0.9230769230769231,
+      "quality_score": 84.63850245499181
+    },
+    {
+      "file": "src/finchat_sec_qa/quantum_benchmarks.py",
+      "total_lines": 1227,
+      "code_lines": 983,
+      "comment_lines": 62,
+      "comment_ratio": 0.05052974735126324,
+      "functions": 32,
+      "classes": 8,
+      "complexity_score": 70,
+      "docstring_coverage": 1.0,
+      "quality_score": 86.01696210268949
+    },
+    {
+      "file": "src/finchat_sec_qa/quantum_enhanced_scaling.py",
+      "total_lines": 772,
+      "code_lines": 616,
+      "comment_lines": 70,
+      "comment_ratio": 0.09067357512953368,
+      "functions": 37,
+      "classes": 5,
+      "complexity_score": 41,
+      "docstring_coverage": 0.9761904761904762,
+      "quality_score": 94.32433099272477
+    },
+    {
+      "file": "src/finchat_sec_qa/quantum_hybrid_optimization.py",
+      "total_lines": 959,
+      "code_lines": 769,
+      "comment_lines": 99,
+      "comment_ratio": 0.1032325338894682,
+      "functions": 32,
+      "classes": 7,
+      "complexity_score": 36,
+      "docstring_coverage": 0.8717948717948718,
+      "quality_score": 91.9816749552151
+    },
+    {
+      "file": "src/finchat_sec_qa/quantum_monitoring.py",
+      "total_lines": 916,
+      "code_lines": 752,
+      "comment_lines": 37,
+      "comment_ratio": 0.04039301310043668,
+      "functions": 42,
+      "classes": 9,
+      "complexity_score": 50,
+      "docstring_coverage": 0.9215686274509803,
+      "quality_score": 84.35026849167615
+    },
+    {
+      "file": "src/finchat_sec_qa/quantum_portfolio.py",
+      "total_lines": 1025,
+      "code_lines": 805,
+      "comment_lines": 99,
+      "comment_ratio": 0.09658536585365854,
+      "functions": 31,
+      "classes": 7,
+      "complexity_score": 63,
+      "docstring_coverage": 0.9473684210526315,
+      "quality_score": 91.28576752660565
+    },
+    {
+      "file": "src/finchat_sec_qa/quantum_risk_ml.py",
+      "total_lines": 974,
+      "code_lines": 759,
+      "comment_lines": 109,
+      "comment_ratio": 0.11190965092402463,
+      "functions": 28,
+      "classes": 7,
+      "complexity_score": 81,
+      "docstring_coverage": 0.9714285714285714,
+      "quality_score": 91.96501906717512
+    },
+    {
+      "file": "src/finchat_sec_qa/quantum_timeseries.py",
+      "total_lines": 658,
+      "code_lines": 509,
+      "comment_lines": 58,
+      "comment_ratio": 0.08814589665653495,
+      "functions": 22,
+      "classes": 7,
+      "complexity_score": 27,
+      "docstring_coverage": 1.0,
+      "quality_score": 94.54006631666205
+    },
+    {
+      "file": "src/finchat_sec_qa/query_handler.py",
+      "total_lines": 275,
+      "code_lines": 211,
+      "comment_lines": 7,
+      "comment_ratio": 0.025454545454545455,
+      "functions": 8,
+      "classes": 2,
+      "complexity_score": 1,
+      "docstring_coverage": 0.9,
+      "quality_score": 84.44318181818183
+    },
+    {
+      "file": "src/finchat_sec_qa/rate_limiting.py",
+      "total_lines": 227,
+      "code_lines": 188,
+      "comment_lines": 15,
+      "comment_ratio": 0.06607929515418502,
+      "functions": 8,
+      "classes": 3,
+      "complexity_score": 11,
+      "docstring_coverage": 0.9090909090909091,
+      "quality_score": 87.15053063676412
+    },
+    {
+      "file": "src/finchat_sec_qa/risk_intelligence.py",
+      "total_lines": 38,
+      "code_lines": 29,
+      "comment_lines": 0,
+      "comment_ratio": 0.0,
+      "functions": 2,
+      "classes": 2,
+      "complexity_score": 0,
+      "docstring_coverage": 0.75,
+      "quality_score": 75.0
+    },
+    {
+      "file": "src/finchat_sec_qa/robust_error_handling.py",
+      "total_lines": 790,
+      "code_lines": 656,
+      "comment_lines": 39,
+      "comment_ratio": 0.049367088607594936,
+      "functions": 37,
+      "classes": 6,
+      "complexity_score": 55,
+      "docstring_coverage": 0.9069767441860465,
+      "quality_score": 84.22467359912164
+    },
+    {
+      "file": "src/finchat_sec_qa/secrets_manager.py",
+      "total_lines": 450,
+      "code_lines": 362,
+      "comment_lines": 29,
+      "comment_ratio": 0.06444444444444444,
+      "functions": 19,
+      "classes": 3,
+      "complexity_score": 39,
+      "docstring_coverage": 1.0,
+      "quality_score": 88.50877192982456
+    },
+    {
+      "file": "src/finchat_sec_qa/server.py",
+      "total_lines": 683,
+      "code_lines": 564,
+      "comment_lines": 51,
+      "comment_ratio": 0.0746705710102489,
+      "functions": 4,
+      "classes": 4,
+      "complexity_score": 5,
+      "docstring_coverage": 0.75,
+      "quality_score": 82.45058565153734
+    },
+    {
+      "file": "src/finchat_sec_qa/utils.py",
+      "total_lines": 211,
+      "code_lines": 167,
+      "comment_lines": 11,
+      "comment_ratio": 0.052132701421800945,
+      "functions": 18,
+      "classes": 2,
+      "complexity_score": 13,
+      "docstring_coverage": 1.0,
+      "quality_score": 90.65323854660348
+    },
+    {
+      "file": "src/finchat_sec_qa/validation.py",
+      "total_lines": 85,
+      "code_lines": 61,
+      "comment_lines": 6,
+      "comment_ratio": 0.07058823529411765,
+      "functions": 2,
+      "classes": 0,
+      "complexity_score": 10,
+      "docstring_coverage": 1.0,
+      "quality_score": 80.58823529411765
+    },
+    {
+      "file": "src/finchat_sec_qa/voice_interface.py",
+      "total_lines": 25,
+      "code_lines": 17,
+      "comment_lines": 0,
+      "comment_ratio": 0.0,
+      "functions": 1,
+      "classes": 0,
+      "complexity_score": 2,
+      "docstring_coverage": 1.0,
+      "quality_score": 79.0
+    },
+    {
+      "file": "src/finchat_sec_qa/webapp.py",
+      "total_lines": 434,
+      "code_lines": 346,
+      "comment_lines": 38,
+      "comment_ratio": 0.08755760368663594,
+      "functions": 22,
+      "classes": 2,
+      "complexity_score": 31,
+      "docstring_coverage": 0.7916666666666666,
+      "quality_score": 85.57303449238933
+    },
+    {
+      "file": "src/finchat_sec_qa/sdk/__init__.py",
+      "total_lines": 63,
+      "code_lines": 53,
+      "comment_lines": 5,
+      "comment_ratio": 0.07936507936507936,
+      "functions": 0,
+      "classes": 0,
+      "complexity_score": 0,
+      "docstring_coverage": 0,
+      "quality_score": 56.904761904761905
+    },
+    {
+      "file": "src/finchat_sec_qa/sdk/client.py",
+      "total_lines": 445,
+      "code_lines": 367,
+      "comment_lines": 6,
+      "comment_ratio": 0.01348314606741573,
+      "functions": 19,
+      "classes": 2,
+      "complexity_score": 17,
+      "docstring_coverage": 1.0,
+      "quality_score": 84.33826138379656
+    },
+    {
+      "file": "src/finchat_sec_qa/sdk/exceptions.py",
+      "total_lines": 112,
+      "code_lines": 85,
+      "comment_lines": 1,
+      "comment_ratio": 0.008928571428571428,
+      "functions": 5,
+      "classes": 6,
+      "complexity_score": 5,
+      "docstring_coverage": 0.8181818181818182,
+      "quality_score": 76.06655844155846
+    },
+    {
+      "file": "src/finchat_sec_qa/sdk/models.py",
+      "total_lines": 197,
+      "code_lines": 166,
+      "comment_lines": 0,
+      "comment_ratio": 0.0,
+      "functions": 12,
+      "classes": 5,
+      "complexity_score": 3,
+      "docstring_coverage": 1.0,
+      "quality_score": 84.25
+    }
+  ],
+  "test_results": {
+    "src_files_count": 46,
+    "test_files_count": 51,
+    "test_coverage_estimate": 66.52173913043478,
+    "src_files": [
+      "src/finchat_sec_qa/adaptive_learning.py",
+      "src/finchat_sec_qa/auto_scaling.py",
+      "src/finchat_sec_qa/autonomous_value_engine.py",
+      "src/finchat_sec_qa/circuit_breaker.py",
+      "src/finchat_sec_qa/citation.py",
+      "src/finchat_sec_qa/cli.py",
+      "src/finchat_sec_qa/comprehensive_monitoring.py",
+      "src/finchat_sec_qa/config.py",
+      "src/finchat_sec_qa/edgar_client.py",
+      "src/finchat_sec_qa/edgar_validation.py",
+      "src/finchat_sec_qa/file_security.py",
+      "src/finchat_sec_qa/global_first_implementation.py",
+      "src/finchat_sec_qa/health.py",
+      "src/finchat_sec_qa/i18n.py",
+      "src/finchat_sec_qa/intelligent_cache.py",
+      "src/finchat_sec_qa/logging_utils.py",
+      "src/finchat_sec_qa/metrics.py",
+      "src/finchat_sec_qa/multi_company.py",
+      "src/finchat_sec_qa/performance_optimization.py",
+      "src/finchat_sec_qa/photonic_api.py",
+      "src/finchat_sec_qa/photonic_bridge.py",
+      "src/finchat_sec_qa/photonic_cache.py",
+      "src/finchat_sec_qa/photonic_continuous_variables.py",
+      "src/finchat_sec_qa/photonic_mlir.py",
+      "src/finchat_sec_qa/photonic_mlir_synthesizer.py",
+      "src/finchat_sec_qa/qa_engine.py",
+      "src/finchat_sec_qa/quantum_benchmarks.py",
+      "src/finchat_sec_qa/quantum_enhanced_scaling.py",
+      "src/finchat_sec_qa/quantum_hybrid_optimization.py",
+      "src/finchat_sec_qa/quantum_monitoring.py",
+      "src/finchat_sec_qa/quantum_portfolio.py",
+      "src/finchat_sec_qa/quantum_risk_ml.py",
+      "src/finchat_sec_qa/quantum_timeseries.py",
+      "src/finchat_sec_qa/query_handler.py",
+      "src/finchat_sec_qa/rate_limiting.py",
+      "src/finchat_sec_qa/risk_intelligence.py",
+      "src/finchat_sec_qa/robust_error_handling.py",
+      "src/finchat_sec_qa/secrets_manager.py",
+      "src/finchat_sec_qa/server.py",
+      "src/finchat_sec_qa/utils.py",
+      "src/finchat_sec_qa/validation.py",
+      "src/finchat_sec_qa/voice_interface.py",
+      "src/finchat_sec_qa/webapp.py",
+      "src/finchat_sec_qa/sdk/client.py",
+      "src/finchat_sec_qa/sdk/exceptions.py",
+      "src/finchat_sec_qa/sdk/models.py"
+    ],
+    "test_files": [
+      "tests/test_async_edgar_client.py",
+      "tests/test_attach-citations-to-qa-responses.py",
+      "tests/test_autonomous_value_engine.py",
+      "tests/test_bounded_cache_memory_safety.py",
+      "tests/test_citation_position_accuracy.py",
+      "tests/test_cli_subcommands.py",
+      "tests/test_comprehensive_monitoring.py",
+      "tests/test_config.py",
+      "tests/test_contributor_documentation.py",
+      "tests/test_cors_configuration.py",
+      "tests/test_create-cli-command-to-display-citations.py",
+      "tests/test_design-citation-data-model.py",
+      "tests/test_distributed_rate_limiting.py",
+      "tests/test_docker_integration.py",
+      "tests/test_edgar_client_integration.py",
+      "tests/test_edgar_client_refactoring.py",
+      "tests/test_edgar_validation.py",
+      "tests/test_enhanced_authentication.py",
+      "tests/test_extract-citation-anchors-from-filings.py",
+      "tests/test_finchat_agent.py",
+      "tests/test_foundational.py",
+      "tests/test_lazy_cache_cleanup.py",
+      "tests/test_logging_and_timeouts.py",
+      "tests/test_metrics_unit.py",
+      "tests/test_multi_company_analysis.py",
+      "tests/test_performance_benchmarks.py",
+      "tests/test_performance_optimization.py",
+      "tests/test_persistence.py",
+      "tests/test_photonic_bridge.py",
+      "tests/test_photonic_mlir.py",
+      "tests/test_prometheus_metrics.py",
+      "tests/test_qa_engine_bulk_operations.py",
+      "tests/test_qa_engine_chunking_refactor.py",
+      "tests/test_query_handler.py",
+      "tests/test_redis_connection_pooling.py",
+      "tests/test_request_security_limits.py",
+      "tests/test_resource_management.py",
+      "tests/test_risk_intelligence.py",
+      "tests/test_sdk_client.py",
+      "tests/test_secrets_encryption_security.py",
+      "tests/test_secrets_management.py",
+      "tests/test_secure_file_operations.py",
+      "tests/test_security_validation.py",
+      "tests/test_server.py",
+      "tests/test_ticker_caching.py",
+      "tests/test_validation.py",
+      "tests/test_voice_interface.py",
+      "tests/test_webapp.py",
+      "tests/test_webapp_ip_security.py",
+      "tests/test_webapp_token_security.py",
+      "tests/unit/test_qa_engine_comprehensive.py"
+    ]
+  },
+  "overall_status": "POOR",
+  "summary": {
+    "security_score": 25,
+    "quality_score": 83.22455152912698,
+    "test_score": 66.52173913043478,
+    "overall_score": 55.75902781780314,
+    "status": "POOR",
+    "total_files_analyzed": 48,
+    "total_lines_of_code": 19023,
+    "security_issues": 1,
+    "security_warnings": 11
+  }
+}

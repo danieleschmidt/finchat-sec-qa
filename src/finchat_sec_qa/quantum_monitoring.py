@@ -897,6 +897,9 @@ def monitor_quantum_algorithm(monitor: QuantumMonitor, algorithm_name: str):
     return decorator
 
 
+# Alias for backward compatibility
+QuantumMonitoringService = QuantumMonitor
+
 # Export main classes and functions
 __all__ = [
     'MetricType',
@@ -908,5 +911,6 @@ __all__ = [
     'AlertManager',
     'PerformanceTracer',
     'QuantumMonitor',
+    'QuantumMonitoringService',
     'monitor_quantum_algorithm'
 ]
