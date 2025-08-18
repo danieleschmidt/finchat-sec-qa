@@ -1,7 +1,7 @@
 # Flask WebApp Dockerfile
 # Multi-stage build for optimized production image
 
-FROM python:3.13-slim as builder
+FROM python:3.13.7-slim as builder
 
 # Set environment variables for Python
 ENV PYTHONUNBUFFERED=1
@@ -24,7 +24,7 @@ RUN pip install --no-cache-dir -e .
 RUN pip install --no-cache-dir gunicorn
 
 # Production stage
-FROM python:3.13-slim as production
+FROM python:3.13.7-slim as production
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
