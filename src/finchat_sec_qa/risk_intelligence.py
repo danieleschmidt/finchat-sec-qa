@@ -13,6 +13,8 @@ class RiskAssessment:
     text: str
     sentiment: float
     flags: List[str] = field(default_factory=list)
+    risk_level: str = "low"
+    risk_factors: List[str] = field(default_factory=list)
 
 
 class RiskAnalyzer:
@@ -35,4 +37,22 @@ class RiskAnalyzer:
             for category, words in self.keyword_map.items()
             if any(word in lower for word in words)
         ]
-        return RiskAssessment(text=text, sentiment=score, flags=flags)
+        
+        # Determine risk level
+        risk_level = "low"
+        if score < -0.5 or len(flags) > 2:
+            risk_level = "high"
+        elif score < -0.2 or len(flags) > 0:
+            risk_level = "medium"
+        
+        return RiskAssessment(
+            text=text, 
+            sentiment=score, 
+            flags=flags,
+            risk_level=risk_level,
+            risk_factors=flags
+        )
+    
+    def analyze_text(self, text: str) -> RiskAssessment:
+        """Alias for assess method to match expected interface."""
+        return self.assess(text)

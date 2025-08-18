@@ -1,0 +1,45 @@
+{
+  "terragon_sdlc_version": "4.0",
+  "validation_timestamp": "2025-08-18T03:17:13.585460",
+  "validation_duration_seconds": 2.509666,
+  "overall_result": "FAILED",
+  "gates_results": {
+    "\ud83d\udccb Code Runs Without Errors": {
+      "passed": true,
+      "timestamp": "2025-08-18T03:17:13.523983"
+    },
+    "\ud83e\uddea Core Tests Pass": {
+      "passed": false,
+      "timestamp": "2025-08-18T03:17:13.538113"
+    },
+    "\ud83d\udd12 Security Scan": {
+      "passed": false,
+      "timestamp": "2025-08-18T03:17:13.538934"
+    },
+    "\u26a1 Performance Benchmarks": {
+      "passed": false,
+      "timestamp": "2025-08-18T03:17:13.550358"
+    },
+    "\ud83d\udcda Documentation Coverage": {
+      "passed": true,
+      "timestamp": "2025-08-18T03:17:13.551151"
+    },
+    "\ud83d\udd04 Autonomous Systems": {
+      "passed": false,
+      "timestamp": "2025-08-18T03:17:13.562367"
+    },
+    "\ud83c\udf10 Global-First Features": {
+      "passed": true,
+      "timestamp": "2025-08-18T03:17:13.572957"
+    },
+    "\ud83d\udd27 Integration Tests": {
+      "passed": false,
+      "timestamp": "2025-08-18T03:17:13.585325"
+    }
+  },
+  "summary": {
+    "total_gates": 8,
+    "passed_gates": 3,
+    "failed_gates": 5
+  }
+}
