@@ -569,5 +569,68 @@ class RobustErrorHandler:
             'severity_distribution': severity_distribution,
             'error_patterns_detected': len(self.error_patterns),
             'circuit_breakers': circuit_breaker_status,
-            'analytics_timestamp': datetime.now().isoformat()
+            'analytics_timestamp': datetime.now().isoformat(),
+            'top_error_functions': self._get_top_error_functions(),
+            'mttr': self._calculate_mean_time_to_resolution()
         }
+    
+    def _get_top_error_functions(self) -> List[Dict[str, Any]]:
+        """Get functions with highest error rates."""
+        function_errors = {}
+        for error in self.error_history:
+            func = error.function_name
+            if func not in function_errors:
+                function_errors[func] = {'count': 0, 'resolved': 0}
+            function_errors[func]['count'] += 1
+            if error.resolved:
+                function_errors[func]['resolved'] += 1
+        
+        # Sort by error count
+        sorted_functions = sorted(
+            function_errors.items(), 
+            key=lambda x: x[1]['count'], 
+            reverse=True
+        )[:5]
+        
+        return [
+            {
+                'function': func,
+                'error_count': stats['count'],
+                'resolution_rate': stats['resolved'] / stats['count'] if stats['count'] > 0 else 0
+            }
+            for func, stats in sorted_functions
+        ]
+    
+    def _calculate_mean_time_to_resolution(self) -> float:
+        """Calculate mean time to resolution for resolved errors."""
+        resolved_errors = [e for e in self.error_history if e.resolved]
+        if not resolved_errors:
+            return 0.0
+        
+        # For now, estimate based on retry count (simplified)
+        total_resolution_time = sum(e.retry_count * self.base_retry_delay for e in resolved_errors)
+        return total_resolution_time / len(resolved_errors) if resolved_errors else 0.0
+
+
+# Global instance for easy access
+robust_handler = RobustErrorHandler()
+
+
+# Convenience decorators
+def robust_operation(max_retries: int = 3, 
+                   circuit_breaker_key: Optional[str] = None,
+                   timeout_seconds: Optional[float] = None,
+                   fallback_result: Any = None):
+    """Convenience decorator for robust operations."""
+    return robust_handler.robust_wrapper(
+        max_retries=max_retries,
+        circuit_breaker_key=circuit_breaker_key,
+        timeout_seconds=timeout_seconds,
+        fallback_result=fallback_result
+    )
+
+
+# Context managers
+def error_tracking(operation_name: str, **context_data):
+    """Convenience context manager for error tracking."""
+    return robust_handler.error_context(operation_name, **context_data)

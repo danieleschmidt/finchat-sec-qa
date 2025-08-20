@@ -1,0 +1,177 @@
+{
+  "execution_summary": {
+    "timestamp": "2025-08-20T03:18:23.089046",
+    "total_execution_time": 12.606378555297852,
+    "total_gates": 6,
+    "passed_gates": 5,
+    "failed_gates": 1,
+    "overall_score": 0.7947260279909739,
+    "overall_status": "\ud83d\udfe1 GOOD",
+    "deployment_ready": true
+  },
+  "gate_results": [
+    {
+      "name": "Code Quality",
+      "passed": true,
+      "score": 0.8826521113649827,
+      "details": {
+        "linting": {
+          "status": "issues_found",
+          "issues": 0,
+          "sample_issues": []
+        },
+        "type_checking": {
+          "status": "issues_found",
+          "stderr": "/root/repo/venv/bin/python: No module named mypy\n"
+        },
+        "complexity": {
+          "total_lines": 7878,
+          "complex_functions": 41,
+          "score": 0.947956334094948
+        }
+      },
+      "execution_time": 0.07143497467041016,
+      "timestamp": "2025-08-20T03:18:10.554105"
+    },
+    {
+      "name": "Security Analysis",
+      "passed": true,
+      "score": 1.0,
+      "details": {
+        "bandit": {
+          "status": "vulnerabilities_found",
+          "total_vulnerabilities": 0,
+          "high_severity": 0,
+          "medium_severity": 0,
+          "low_severity": 0,
+          "sample_issues": []
+        },
+        "secrets_scan": {
+          "secrets_found": 0,
+          "score": 1.0
+        }
+      },
+      "execution_time": 0.04088902473449707,
+      "timestamp": "2025-08-20T03:18:10.595321"
+    },
+    {
+      "name": "Test Coverage",
+      "passed": false,
+      "score": 0.08999999999999998,
+      "details": {
+        "coverage": {
+          "total_coverage": 0,
+          "error": "could_not_parse_coverage"
+        },
+        "tests": {
+          "status": "0_failures_7_errors",
+          "output_lines": 50,
+          "test_score": 0.29999999999999993
+        }
+      },
+      "execution_time": 11.233420372009277,
+      "timestamp": "2025-08-20T03:18:21.829058"
+    },
+    {
+      "name": "Performance Benchmarks",
+      "passed": true,
+      "score": 0.8582040565808614,
+      "details": {
+        "imports": {
+          "total_time": 1.2509472370147705,
+          "module_times": {
+            "finchat_sec_qa.config": 1.2509384155273438,
+            "finchat_sec_qa.validation": 2.86102294921875e-06
+          },
+          "score": 0.6872631907463074
+        },
+        "operations": {
+          "time": 0.001341104507446289,
+          "processed_items": 5000,
+          "score": 0.9993294477462769
+        },
+        "memory": {
+          "memory_mb": 111.98046875,
+          "score": 0.88801953125
+        }
+      },
+      "execution_time": 1.2527425289154053,
+      "timestamp": "2025-08-20T03:18:23.082169"
+    },
+    {
+      "name": "Documentation",
+      "passed": true,
+      "score": 1.0,
+      "details": {
+        "essential_docs": {
+          "found": 4,
+          "total": 4,
+          "score": 1.0
+        },
+        "docstrings": {
+          "total_functions": 151,
+          "documented_functions": 151,
+          "score": 1.0
+        },
+        "docs_directory": {
+          "exists": true,
+          "md_files": 39,
+          "score": 1.0
+        }
+      },
+      "execution_time": 0.004918813705444336,
+      "timestamp": "2025-08-20T03:18:23.087658"
+    },
+    {
+      "name": "Deployment Readiness",
+      "passed": true,
+      "score": 0.9375,
+      "details": {
+        "deployment_config": {
+          "found": 3,
+          "total": 4,
+          "files_found": [
+            "docker-compose.yml",
+            "pyproject.toml",
+            "requirements.txt"
+          ],
+          "score": 0.75
+        },
+        "environment_config": {
+          "has_env_config": true,
+          "score": 1.0
+        },
+        "ci_cd": {
+          "has_ci_config": true,
+          "score": 1.0
+        },
+        "package_structure": {
+          "src_directory_exists": true,
+          "init_files_found": 3,
+          "score": 1.0
+        }
+      },
+      "execution_time": 0.0009846687316894531,
+      "timestamp": "2025-08-20T03:18:23.088880"
+    }
+  ],
+  "quality_metrics": {
+    "code_quality": 0.8826521113649827,
+    "security_score": 1.0,
+    "test_coverage": 0.08999999999999998,
+    "performance": 0.8582040565808614,
+    "documentation": 1.0,
+    "deployment_readiness": 0.9375
+  },
+  "recommendations": [
+    "Increase test coverage: Add more unit tests, aim for 85%+ coverage"
+  ],
+  "next_steps": [
+    "\ud83d\udd27 Address failing quality gates:",
+    "   - Fix issues in: Test Coverage (Score: 9.0%)",
+    "\ud83d\udcc8 Continuous improvement:",
+    "   - Set up automated quality gate checks in CI/CD",
+    "   - Monitor quality metrics over time",
+    "   - Regular security and dependency updates"
+  ]
+}
