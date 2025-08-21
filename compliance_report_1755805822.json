@@ -1,0 +1,209 @@
+{
+  "project_name": "FinChat-SEC-QA",
+  "generated_at": "2025-08-21T19:50:22.590599+00:00",
+  "language": "en",
+  "compliance_summary": {
+    "total_rules": 6,
+    "recent_processing_records": 1,
+    "compliance_rate": 100.0,
+    "framework_distribution": {
+      "gdpr": 1
+    },
+    "category_distribution": {
+      "pii": 1
+    },
+    "violation_summary": {
+      "records_with_violations": 0
+    },
+    "supported_frameworks": [
+      "gdpr",
+      "ccpa",
+      "pdpa",
+      "pipeda",
+      "lgpd",
+      "popia",
+      "sox",
+      "pci_dss",
+      "iso27001",
+      "nist"
+    ]
+  },
+  "audit_log": [
+    {
+      "timestamp": "2025-08-21T19:50:22.584177+00:00",
+      "action": "region_configuration",
+      "region": "EU",
+      "language": "en",
+      "frameworks": [
+        "gdpr",
+        "iso27001"
+      ],
+      "data_residency": "EU"
+    },
+    {
+      "timestamp": "2025-08-21T19:50:22.584284+00:00",
+      "action": "data_processing",
+      "record_id": "proc_1755805822_1791",
+      "data_subject_id": "test_user",
+      "compliant": true,
+      "violations": [],
+      "frameworks": [
+        "gdpr"
+      ]
+    }
+  ],
+  "privacy_notices": {
+    "en": {
+      "language": "en",
+      "last_updated": "2025-08-21",
+      "sections": {
+        "data_collection": {
+          "title": "Data Privacy",
+          "content": "We collect personal information to provide our financial analysis services."
+        },
+        "legal_basis": {
+          "title": "Legal Basis for Processing",
+          "content": "Processing is based on legitimate business interests and user consent."
+        },
+        "your_rights": {
+          "title": "Your Rights",
+          "rights": [
+            "Right to deletion",
+            "Right to data portability",
+            "Right to withdraw consent"
+          ]
+        },
+        "contact": {
+          "title": "Contact Information",
+          "email": "privacy@finchat.com",
+          "address": "Privacy Office, FinChat Inc."
+        }
+      },
+      "applicable_frameworks": [
+        "gdpr",
+        "ccpa",
+        "pdpa"
+      ]
+    },
+    "es": {
+      "language": "es",
+      "last_updated": "2025-08-21",
+      "sections": {
+        "data_collection": {
+          "title": "Privacidad de Datos",
+          "content": "We collect personal information to provide our financial analysis services."
+        },
+        "legal_basis": {
+          "title": "Legal Basis for Processing",
+          "content": "Processing is based on legitimate business interests and user consent."
+        },
+        "your_rights": {
+          "title": "Your Rights",
+          "rights": [
+            "Right to deletion",
+            "Right to data portability",
+            "Right to withdraw consent"
+          ]
+        },
+        "contact": {
+          "title": "Contact Information",
+          "email": "privacy@finchat.com",
+          "address": "Privacy Office, FinChat Inc."
+        }
+      },
+      "applicable_frameworks": [
+        "gdpr",
+        "ccpa",
+        "pdpa"
+      ]
+    },
+    "fr": {
+      "language": "fr",
+      "last_updated": "2025-08-21",
+      "sections": {
+        "data_collection": {
+          "title": "Confidentialité des Données",
+          "content": "We collect personal information to provide our financial analysis services."
+        },
+        "legal_basis": {
+          "title": "Legal Basis for Processing",
+          "content": "Processing is based on legitimate business interests and user consent."
+        },
+        "your_rights": {
+          "title": "Your Rights",
+          "rights": [
+            "Right to deletion",
+            "Right to data portability",
+            "Right to withdraw consent"
+          ]
+        },
+        "contact": {
+          "title": "Contact Information",
+          "email": "privacy@finchat.com",
+          "address": "Privacy Office, FinChat Inc."
+        }
+      },
+      "applicable_frameworks": [
+        "gdpr",
+        "ccpa",
+        "pdpa"
+      ]
+    },
+    "de": {
+      "language": "de",
+      "last_updated": "2025-08-21",
+      "sections": {
+        "data_collection": {
+          "title": "Datenschutz",
+          "content": "We collect personal information to provide our financial analysis services."
+        },
+        "legal_basis": {
+          "title": "Legal Basis for Processing",
+          "content": "Processing is based on legitimate business interests and user consent."
+        },
+        "your_rights": {
+          "title": "Your Rights",
+          "rights": [
+            "Right to deletion",
+            "Right to data portability",
+            "Right to withdraw consent"
+          ]
+        },
+        "contact": {
+          "title": "Contact Information",
+          "email": "privacy@finchat.com",
+          "address": "Privacy Office, FinChat Inc."
+        }
+      },
+      "applicable_frameworks": [
+        "gdpr",
+        "ccpa",
+        "pdpa"
+      ]
+    }
+  },
+  "supported_frameworks": [
+    "gdpr",
+    "ccpa",
+    "pdpa",
+    "pipeda",
+    "lgpd",
+    "popia",
+    "sox",
+    "pci_dss",
+    "iso27001",
+    "nist"
+  ],
+  "supported_languages": [
+    "en",
+    "es",
+    "fr",
+    "de",
+    "ja",
+    "zh",
+    "pt",
+    "ru",
+    "ar",
+    "hi"
+  ]
+}
