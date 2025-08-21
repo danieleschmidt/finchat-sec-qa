@@ -1,0 +1,133 @@
+{
+  "project_path": "/root/repo",
+  "execution_history": [
+    {
+      "overall_status": "failed",
+      "overall_score": 63.75,
+      "total_gates": 4,
+      "gates_passed": 1,
+      "gates_warning": 2,
+      "gates_failed": 1,
+      "gate_details": {
+        "code_execution": {
+          "status": "passed",
+          "score": 100.0,
+          "threshold": 100.0,
+          "message": "All code executes without errors"
+        },
+        "test_coverage": {
+          "status": "failed",
+          "score": 0.0,
+          "threshold": 85.0,
+          "message": "Coverage analysis failed: Unknown error"
+        },
+        "security_scan": {
+          "status": "warning",
+          "score": 75.0,
+          "threshold": 85.0,
+          "message": "Security scan passed with warnings, score 75.0%"
+        },
+        "performance_benchmark": {
+          "status": "warning",
+          "score": 80.0,
+          "threshold": 85.0,
+          "message": "Performance benchmarks passed with warnings, score 80.0%"
+        }
+      },
+      "quality_level": "poor",
+      "execution_time": 13.979307413101196,
+      "timestamp": "2025-08-21 19:44:12"
+    }
+  ],
+  "latest_results": {
+    "code_execution": {
+      "gate_type": "QualityGateType.CODE_EXECUTION",
+      "status": "QualityGateStatus.PASSED",
+      "score": 100.0,
+      "threshold": 100.0,
+      "message": "All code executes without errors",
+      "details": {
+        "syntax_errors": [],
+        "import_errors": [],
+        "smoke_test_errors": []
+      },
+      "execution_time": 2.077380657196045,
+      "timestamp": 1755805440.294546
+    },
+    "test_coverage": {
+      "gate_type": "QualityGateType.TEST_COVERAGE",
+      "status": "QualityGateStatus.FAILED",
+      "score": 0.0,
+      "threshold": 85.0,
+      "message": "Coverage analysis failed: Unknown error",
+      "details": {
+        "success": false,
+        "coverage_percentage": 0.0,
+        "coverage_data": {},
+        "test_summary": {
+          "passed": 0,
+          "failed": 0,
+          "skipped": 0,
+          "errors": 0
+        },
+        "stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.12.3, pytest-8.4.1, pluggy-1.6.0\nrootdir: /root/repo\nconfigfile: pyproject.toml\nplugins: anyio-4.10.0, mock-3.14.1, cov-6.2.1, asyncio-1.1.0\nasyncio: mode=Mode.STRICT, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollected 451 items / 6 errors / 1 skipped\n\n==================================== ERRORS ====================================\n____________ ERROR collecting tests/test_advanced_scaling_engine.py ____________\nImportError while importing test module '/root/repo/tests/test_advanced_scaling_engine.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n/usr/lib/python3.12/importlib/__init__.py:90: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntests/test_advanced_scaling_engine.py:12: in <module>\n    from finchat_sec_qa.advanced_scaling_engine import (\nsrc/finchat_sec_qa/advanced_scaling_engine.py:25: in <module>\n    import psutil\nE   ModuleNotFoundError: No module named 'psutil'\n___________ ERROR collecting tests/test_comprehensive_monitoring.py ____________\nImportError while importing test module '/root/repo/tests/test_comprehensive_monitoring.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n/usr/lib/python3.12/importlib/__init__.py:90: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntests/test_comprehensive_monitoring.py:16: in <module>\n    from finchat_sec_qa.comprehensive_monitoring import (\nsrc/finchat_sec_qa/comprehensive_monitoring.py:22: in <module>\n    import psutil\nE   ModuleNotFoundError: No module named 'psutil'\n______________ ERROR collecting tests/test_docker_integration.py _______________\nImportError while importing test module '/root/repo/tests/test_docker_integration.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n/usr/lib/python3.12/importlib/__init__.py:90: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntests/test_docker_integration.py:7: in <module>\n    import yaml\nE   ModuleNotFoundError: No module named 'yaml'\n___________ ERROR collecting tests/test_performance_optimization.py ____________\nImportError while importing test module '/root/repo/tests/test_performance_optimization.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n/usr/lib/python3.12/importlib/__init__.py:90: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntests/test_performance_optimization.py:17: in <module>\n    from finchat_sec_qa.performance_optimization import (\nsrc/finchat_sec_qa/performance_optimization.py:31: in <module>\n    from .comprehensive_monitoring import get_monitoring\nsrc/finchat_sec_qa/comprehensive_monitoring.py:22: in <module>\n    import psutil\nE   ModuleNotFoundError: No module named 'psutil'\n_________ ERROR collecting tests/test_quantum_adaptive_intelligence.py _________\nImportError while importing test module '/root/repo/tests/test_quantum_adaptive_intelligence.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n/usr/lib/python3.12/importlib/__init__.py:90: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntests/test_quantum_adaptive_intelligence.py:14: in <module>\n    import pandas as pd\nE   ModuleNotFoundError: No module named 'pandas'\n___________ ERROR collecting tests/test_terragon_autonomous_core.py ____________\nImportError while importing test module '/root/repo/tests/test_terragon_autonomous_core.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n/usr/lib/python3.12/importlib/__init__.py:90: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntests/test_terragon_autonomous_core.py:14: in <module>\n    from finchat_sec_qa.terragon_autonomous_core import TerragonAutonomousCore\nsrc/finchat_sec_qa/terragon_autonomous_core.py:27: in <module>\n    from .autonomous_intelligence_engine import AutonomousIntelligenceEngine\nsrc/finchat_sec_qa/autonomous_intelligence_engine.py:32: in <module>\n    from .performance_optimization import PerformanceOptimizationEngine\nsrc/finchat_sec_qa/performance_optimization.py:31: in <module>\n    from .comprehensive_monitoring import get_monitoring\nsrc/finchat_sec_qa/comprehensive_monitoring.py:22: in <module>\n    import psutil\nE   ModuleNotFoundError: No module named 'psutil'\n=========================== short test summary info ============================\nSKIPPED [1] tests/test_performance_benchmarks.py:18: Load testing dependencies not available\nERROR tests/test_advanced_scaling_engine.py\nERROR tests/test_comprehensive_monitoring.py\nERROR tests/test_docker_integration.py\nERROR tests/test_performance_optimization.py\nERROR tests/test_quantum_adaptive_intelligence.py\nERROR tests/test_terragon_autonomous_core.py\n!!!!!!!!!!!!!!!!!!! Interrupted: 6 errors during collection !!!!!!!!!!!!!!!!!!!!\n========================= 1 skipped, 6 errors in 7.25s =========================\n",
+        "stderr": "",
+        "return_code": 2
+      },
+      "execution_time": 10.53117561340332,
+      "timestamp": 1755805450.8258343
+    },
+    "security_scan": {
+      "gate_type": "QualityGateType.SECURITY_SCAN",
+      "status": "QualityGateStatus.WARNING",
+      "score": 75.0,
+      "threshold": 85.0,
+      "message": "Security scan passed with warnings, score 75.0%",
+      "details": {
+        "bandit_result": {
+          "success": true,
+          "data": {},
+          "stdout": "",
+          "stderr": "/root/repo/.venv/bin/python3: No module named bandit\n",
+          "return_code": 1
+        },
+        "safety_result": {
+          "success": false,
+          "vulnerabilities": [],
+          "stdout": "",
+          "stderr": "/root/repo/.venv/bin/python3: No module named safety\n",
+          "return_code": 1
+        },
+        "bandit_score": 100,
+        "safety_score": 50.0
+      },
+      "execution_time": 0.05597519874572754,
+      "timestamp": 1755805450.8819323
+    },
+    "performance_benchmark": {
+      "gate_type": "QualityGateType.PERFORMANCE_BENCHMARK",
+      "status": "QualityGateStatus.WARNING",
+      "score": 80.0,
+      "threshold": 85.0,
+      "message": "Performance benchmarks passed with warnings, score 80.0%",
+      "details": {
+        "success": true,
+        "benchmarks": {
+          "import_benchmark": {
+            "success": true,
+            "import_time_ms": 1035.1922512054443
+          },
+          "operations_benchmark": {
+            "avg_time_ms": 0.09913444519042969,
+            "min_time_ms": 0.0858306884765625,
+            "max_time_ms": 0.14829635620117188,
+            "operations": 10
+          }
+        }
+      },
+      "execution_time": 1.3142673969268799,
+      "timestamp": 1755805452.1963367
+    }
+  },
+  "generated_at": "2025-08-21 19:44:12"
+}
