@@ -1,0 +1,265 @@
+{
+  "timestamp": "2025-08-22T21:59:19.338425",
+  "duration_seconds": 3.224714,
+  "overall_success": false,
+  "test_summary": {
+    "total_tests": 7,
+    "passed_tests": 4,
+    "failed_tests": 3,
+    "success_rate": 0.5714285714285714
+  },
+  "research_readiness": {
+    "level": "Research In Progress",
+    "ready_for_publication": false,
+    "ready_for_peer_review": false
+  },
+  "detailed_results": {
+    "Module Import Tests": {
+      "success": false,
+      "results": {
+        "finchat_sec_qa.quantum_neural_hybrid_architecture": {
+          "imported": false,
+          "error": "No module named 'httpx'"
+        },
+        "finchat_sec_qa.quantum_reinforcement_learning_trader": {
+          "imported": false,
+          "error": "No module named 'httpx'"
+        },
+        "finchat_sec_qa.quantum_explainable_ai_engine": {
+          "imported": false,
+          "error": "No module named 'httpx'"
+        },
+        "finchat_sec_qa.quantum_performance_optimization_engine": {
+          "imported": false,
+          "error": "No module named 'httpx'"
+        },
+        "finchat_sec_qa.quantum_distributed_scaling_orchestrator": {
+          "imported": false,
+          "error": "No module named 'httpx'"
+        },
+        "summary": {
+          "total_modules": 5,
+          "successful_imports": 0,
+          "success_rate": 0.0
+        }
+      },
+      "timestamp": "2025-08-22T21:59:16.119943"
+    },
+    "Quantum Architecture Tests": {
+      "success": false,
+      "results": {
+        "quantum_neural": {
+          "created": false,
+          "error": "No module named 'httpx'"
+        },
+        "quantum_rl": {
+          "created": false,
+          "error": "No module named 'httpx'"
+        },
+        "quantum_xai": {
+          "created": false,
+          "error": "No module named 'httpx'"
+        }
+      },
+      "timestamp": "2025-08-22T21:59:16.122465"
+    },
+    "Performance Benchmarks": {
+      "success": true,
+      "results": {
+        "performance": {
+          "computation_time": 2.952507972717285,
+          "operations_per_second": 3386.9510573401394,
+          "memory_efficiency_mb": 0.015625,
+          "quantum_state_size": 1024,
+          "passes_threshold": true
+        },
+        "scaling": {
+          "results": [
+            {
+              "scale_factor": 1,
+              "time": 0.0002846717834472656,
+              "efficiency": 3512.817420435511
+            },
+            {
+              "scale_factor": 2,
+              "time": 0.0001773834228515625,
+              "efficiency": 2818.7526881720432
+            },
+            {
+              "scale_factor": 4,
+              "time": 0.000148773193359375,
+              "efficiency": 1680.4102564102564
+            },
+            {
+              "scale_factor": 8,
+              "time": 0.00019240379333496094,
+              "efficiency": 649.6753407682776
+            }
+          ],
+          "sublinear_scaling": true
+        }
+      },
+      "timestamp": "2025-08-22T21:59:19.076538"
+    },
+    "Statistical Validation": {
+      "success": "True",
+      "results": {
+        "statistical": {
+          "p_value": 6.924824371506828e-42,
+          "effect_size": 2.4791529565296626,
+          "wilcoxon_p_value": 2.3592029627626127e-29,
+          "confidence_interval": [
+            0.08555329912562742,
+            0.11797338544631965
+          ],
+          "statistically_significant": "True",
+          "practically_significant": "True",
+          "quantum_mean": 0.8459479185292946,
+          "classical_mean": 0.7438427209166433,
+          "improvement_percentage": 13.726718665314936
+        }
+      },
+      "timestamp": "2025-08-22T21:59:19.132204"
+    },
+    "Quantum Coherence Tests": {
+      "success": "True",
+      "results": {
+        "coherence": {
+          "initial_coherence": 255.00000000000006,
+          "final_coherence": 255.0,
+          "coherence_retention": 0.9999999999999998,
+          "final_fidelity": 0.9956253053446964,
+          "coherence_preserved": "True",
+          "decoherence_steps": 50
+        },
+        "entanglement": {
+          "entanglement_entropy": 1.0,
+          "entanglement_measure": 1.0,
+          "maximally_entangled": "True"
+        }
+      },
+      "timestamp": "2025-08-22T21:59:19.155748"
+    },
+    "Scaling Validation": {
+      "success": "False",
+      "results": {
+        "horizontal_scaling": {
+          "scaling_data": [
+            {
+              "n_qubits": 4,
+              "state_size": 16,
+              "computation_time": 0.0002353191375732422,
+              "time_per_qubit": 5.882978439331055e-05
+            },
+            {
+              "n_qubits": 6,
+              "state_size": 64,
+              "computation_time": 0.0007338523864746094,
+              "time_per_qubit": 0.00012230873107910156
+            },
+            {
+              "n_qubits": 8,
+              "state_size": 256,
+              "computation_time": 0.00838613510131836,
+              "time_per_qubit": 0.001048266887664795
+            },
+            {
+              "n_qubits": 10,
+              "state_size": 1024,
+              "computation_time": 0.17007803916931152,
+              "time_per_qubit": 0.01700780391693115
+            }
+          ],
+          "exponential_slope": 1.1092618628285038,
+          "reasonable_scaling": "False"
+        },
+        "vertical_scaling": {
+          "complexity_data": [
+            {
+              "circuit_depth": 5,
+              "computation_time": 0.00019693374633789062,
+              "time_per_gate": 3.938674926757812e-05
+            },
+            {
+              "circuit_depth": 10,
+              "computation_time": 0.00020003318786621094,
+              "time_per_gate": 2.0003318786621095e-05
+            },
+            {
+              "circuit_depth": 15,
+              "computation_time": 0.0004036426544189453,
+              "time_per_gate": 2.6909510294596353e-05
+            },
+            {
+              "circuit_depth": 20,
+              "computation_time": 0.0003762245178222656,
+              "time_per_gate": 1.8811225891113283e-05
+            }
+          ],
+          "linear_slope": 1.4829635620117192e-05,
+          "linear_scaling": "True"
+        }
+      },
+      "timestamp": "2025-08-22T21:59:19.337879"
+    },
+    "Research Publication Tests": {
+      "success": "True",
+      "results": {
+        "reproducibility": {
+          "n_runs": 10,
+          "results": [
+            0.09473090995174016,
+            0.1018548549108923,
+            0.09733472561444367,
+            0.09066259503208685,
+            0.0905784031131025,
+            0.09471626826045687,
+            0.10233028454912296,
+            0.10662300540405822,
+            0.11139390229170221,
+            0.10168346220870073
+          ],
+          "mean_improvement": 0.09919084113363065,
+          "std_improvement": 0.006462050952675171,
+          "coefficient_of_variation": 0.06514765757424566,
+          "reproducible": "True"
+        },
+        "documentation": {
+          "score": 5,
+          "max_score": 5,
+          "elements": [
+            "Mathematical formulation present",
+            "Algorithm complexity analyzed",
+            "Statistical validation included",
+            "Reproducibility guidelines provided",
+            "Benchmark comparisons available"
+          ],
+          "complete": true
+        },
+        "novelty": {
+          "metrics": {
+            "algorithmic_innovation": 0.9,
+            "theoretical_contribution": 0.8,
+            "practical_application": 0.85,
+            "empirical_validation": 0.9,
+            "comparison_to_sota": 0.8
+          },
+          "overall_score": 0.85,
+          "novel_contribution": "True"
+        }
+      },
+      "timestamp": "2025-08-22T21:59:19.338413"
+    }
+  },
+  "recommendations": [
+    "Address failing test cases before publication",
+    "Continue development and testing",
+    "Focus on core algorithm implementation",
+    "Improve basic functionality before advanced testing"
+  ],
+  "academic_metrics": {
+    "statistical_significance": "True",
+    "effect_size": 2.4791529565296626,
+    "reproducible": "True"
+  }
+}
