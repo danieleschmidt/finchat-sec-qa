@@ -1,0 +1,79 @@
+# Terragon Quantum API - Production Dockerfile
+# Optimized for maximum performance and security
+# Supports GPU acceleration and hyperscale processing
+
+FROM nvidia/cuda:12.2-runtime-ubuntu22.04 AS base
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    python3.10 \
+    python3.10-dev \
+    python3-pip \
+    curl \
+    wget \
+    build-essential \
+    pkg-config \
+    libopenblas-dev \
+    liblapack-dev \
+    gfortran \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create quantum user for security
+RUN useradd -m -u 1000 quantum && \
+    mkdir -p /app /data /logs && \
+    chown -R quantum:quantum /app /data /logs
+
+WORKDIR /app
+
+# Copy requirements first for better layer caching
+COPY requirements.txt pyproject.toml ./
+
+# Install Python dependencies
+RUN pip3 install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip3 install --no-cache-dir -r requirements.txt && \
+    pip3 install --no-cache-dir uvloop gunicorn
+
+# Install additional performance packages
+RUN pip3 install --no-cache-dir \
+    numba \
+    cupy-cuda12x \
+    accelerate \
+    torch \
+    --extra-index-url https://download.pytorch.org/whl/cu121
+
+# Copy application code
+COPY src/ ./src/
+COPY config/ ./config/
+COPY scripts/ ./scripts/
+
+# Install application
+RUN pip3 install --no-cache-dir -e .
+
+# Copy startup scripts
+COPY docker/entrypoints/quantum-api-entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Set up permissions
+RUN chown -R quantum:quantum /app
+
+# Switch to non-root user
+USER quantum
+
+# Environment variables
+ENV PYTHONPATH=/app/src
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV CUDA_VISIBLE_DEVICES=all
+ENV OMP_NUM_THREADS=4
+ENV NUMBA_CACHE_DIR=/tmp/numba_cache
+
+# Expose ports
+EXPOSE 8080 9090
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
+
+# Default command
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "4", "--worker-class", "uvicorn.workers.UvicornWorker", "--worker-connections", "1000", "--max-requests", "1000", "--max-requests-jitter", "50", "--preload", "--timeout", "120", "finchat_sec_qa.server:app"]
