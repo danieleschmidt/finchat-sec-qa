@@ -1,0 +1,111 @@
+{
+  "timestamp": "2025-08-26T05:17:07.745508",
+  "summary": {
+    "overall_status": "FAILED",
+    "total_duration": 0.004631757736206055,
+    "test_suites_run": 3,
+    "tests_passed": 0,
+    "tests_failed": 0
+  },
+  "test_results": {
+    "unit_tests": {
+      "exit_code": 1,
+      "duration": 0.001989126205444336,
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'python'",
+      "passed": false
+    },
+    "integration_tests": {
+      "exit_code": 1,
+      "duration": 0.0013298988342285156,
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'python'",
+      "passed": false
+    },
+    "all_tests": {
+      "exit_code": 1,
+      "duration": 0.0013127326965332031,
+      "stdout": "",
+      "stderr": "[Errno 2] No such file or directory: 'python'",
+      "passed": false
+    },
+    "linting": {
+      "black": {
+        "passed": false,
+        "output": "[Errno 2] No such file or directory: 'python'"
+      },
+      "isort": {
+        "passed": false,
+        "output": "[Errno 2] No such file or directory: 'python'"
+      },
+      "pylint": {
+        "passed": false,
+        "output": "[Errno 2] No such file or directory: 'python'"
+      },
+      "mypy": {
+        "passed": false,
+        "output": "[Errno 2] No such file or directory: 'python'"
+      }
+    },
+    "security": {
+      "bandit": {
+        "passed": false,
+        "output": "[Errno 2] No such file or directory: 'python'"
+      },
+      "safety": {
+        "passed": false,
+        "output": "[Errno 2] No such file or directory: 'python'"
+      }
+    },
+    "performance": {
+      "performance_tests": {
+        "exit_code": 1,
+        "duration": 0.0011763572692871094,
+        "stdout": "",
+        "stderr": "[Errno 2] No such file or directory: 'python'",
+        "passed": false
+      }
+    }
+  },
+  "quality_gates": {
+    "overall_passed": false,
+    "gates": {
+      "test_coverage": {
+        "threshold": 85.0,
+        "passed": false,
+        "actual": 0.0
+      },
+      "unit_tests": {
+        "threshold": 100.0,
+        "passed": false,
+        "actual": 0.0
+      },
+      "integration_tests": {
+        "threshold": 100.0,
+        "passed": false,
+        "actual": 0.0
+      },
+      "code_quality": {
+        "threshold": 8.0,
+        "passed": false,
+        "actual": 0.0
+      },
+      "security_issues": {
+        "threshold": 0,
+        "passed": false,
+        "actual": 0
+      },
+      "performance_benchmarks": {
+        "threshold": 100.0,
+        "passed": false,
+        "actual": 0.0
+      }
+    }
+  },
+  "recommendations": [
+    "Increase test coverage from 0.0% to at least 85.0%",
+    "Improve code quality score from 0.0 to at least 8.0",
+    "Run 'black src/ tests/' to fix code formatting issues",
+    "Run 'isort src/ tests/' to fix import sorting issues"
+  ]
+}
