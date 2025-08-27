@@ -1,0 +1,104 @@
+{
+  "project_path": "/root/repo",
+  "execution_history": [
+    {
+      "overall_status": "warning",
+      "overall_score": 85.0,
+      "total_gates": 3,
+      "gates_passed": 1,
+      "gates_warning": 2,
+      "gates_failed": 0,
+      "gate_details": {
+        "code_execution": {
+          "status": "passed",
+          "score": 100.0,
+          "threshold": 100.0,
+          "message": "All code executes without errors"
+        },
+        "security_scan": {
+          "status": "warning",
+          "score": 75.0,
+          "threshold": 85.0,
+          "message": "Security scan passed with warnings, score 75.0%"
+        },
+        "performance_benchmark": {
+          "status": "warning",
+          "score": 80.0,
+          "threshold": 85.0,
+          "message": "Performance benchmarks passed with warnings, score 80.0%"
+        }
+      },
+      "quality_level": "good",
+      "execution_time": 4.842976093292236,
+      "timestamp": "2025-08-27 21:02:55"
+    }
+  ],
+  "latest_results": {
+    "code_execution": {
+      "gate_type": "QualityGateType.CODE_EXECUTION",
+      "status": "QualityGateStatus.PASSED",
+      "score": 100.0,
+      "threshold": 100.0,
+      "message": "All code executes without errors",
+      "details": {
+        "syntax_errors": [],
+        "import_errors": [],
+        "smoke_test_errors": []
+      },
+      "execution_time": 2.9564027786254883,
+      "timestamp": 1756328573.279407
+    },
+    "security_scan": {
+      "gate_type": "QualityGateType.SECURITY_SCAN",
+      "status": "QualityGateStatus.WARNING",
+      "score": 75.0,
+      "threshold": 85.0,
+      "message": "Security scan passed with warnings, score 75.0%",
+      "details": {
+        "bandit_result": {
+          "success": true,
+          "data": {},
+          "stdout": "",
+          "stderr": "/root/repo/.venv/bin/python3: No module named bandit\n",
+          "return_code": 1
+        },
+        "safety_result": {
+          "success": false,
+          "vulnerabilities": [],
+          "stdout": "",
+          "stderr": "/root/repo/.venv/bin/python3: No module named safety\n",
+          "return_code": 1
+        },
+        "bandit_score": 100,
+        "safety_score": 50.0
+      },
+      "execution_time": 0.05357480049133301,
+      "timestamp": 1756328573.3331318
+    },
+    "performance_benchmark": {
+      "gate_type": "QualityGateType.PERFORMANCE_BENCHMARK",
+      "status": "QualityGateStatus.WARNING",
+      "score": 80.0,
+      "threshold": 85.0,
+      "message": "Performance benchmarks passed with warnings, score 80.0%",
+      "details": {
+        "success": true,
+        "benchmarks": {
+          "import_benchmark": {
+            "success": true,
+            "import_time_ms": 1458.7993621826172
+          },
+          "operations_benchmark": {
+            "avg_time_ms": 0.09014606475830078,
+            "min_time_ms": 0.08058547973632812,
+            "max_time_ms": 0.1220703125,
+            "operations": 10
+          }
+        }
+      },
+      "execution_time": 1.8325912952423096,
+      "timestamp": 1756328575.1658833
+    }
+  },
+  "generated_at": "2025-08-27 21:02:55"
+}
