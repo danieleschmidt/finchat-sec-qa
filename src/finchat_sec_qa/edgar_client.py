@@ -57,6 +57,8 @@ class BaseEdgarClient:
 class EdgarClient(BaseEdgarClient):
     """Simple client for fetching filings from the SEC EDGAR system."""
 
+    FILING_URL = "https://www.sec.gov"
+
     def __init__(
         self,
         user_agent: str,
@@ -93,7 +95,7 @@ class EdgarClient(BaseEdgarClient):
         if self._ticker_cache is not None:
             return self._ticker_cache
 
-        mapping_url = urljoin(self.BASE_URL, "/files/company_tickers.json")
+        mapping_url = "https://www.sec.gov/files/company_tickers.json"
         self.logger.debug("Loading ticker mapping cache")
         data = self._get(mapping_url).json()
 
@@ -158,8 +160,9 @@ class EdgarClient(BaseEdgarClient):
                     continue
 
                 # Construct URL safely using urljoin and validated components
+                # Filing documents are served from www.sec.gov, not data.sec.gov
                 base_path = f"/Archives/edgar/data/{int(validated_cik)}/{validated_accession.replace('-', '')}/"
-                doc_url = urljoin(self.BASE_URL, base_path + quote(link, safe='.-_'))
+                doc_url = urljoin(self.FILING_URL, base_path + quote(link, safe='.-_'))
 
                 results.append(
                     FilingMetadata(
@@ -194,6 +197,8 @@ class EdgarClient(BaseEdgarClient):
 
 class AsyncEdgarClient(BaseEdgarClient):
     """Async version of EdgarClient for improved performance with concurrent requests."""
+
+    FILING_URL = "https://www.sec.gov"
 
     def __init__(
         self,
@@ -246,7 +251,7 @@ class AsyncEdgarClient(BaseEdgarClient):
         if self._ticker_cache is not None:
             return self._ticker_cache
 
-        mapping_url = urljoin(self.BASE_URL, "/files/company_tickers.json")
+        mapping_url = "https://www.sec.gov/files/company_tickers.json"
         self.logger.debug("Loading ticker mapping cache")
         response = await self._get(mapping_url)
         data = response.json()
@@ -313,8 +318,9 @@ class AsyncEdgarClient(BaseEdgarClient):
                     continue
 
                 # Construct URL safely using urljoin and validated components
+                # Filing documents are served from www.sec.gov, not data.sec.gov
                 base_path = f"/Archives/edgar/data/{int(validated_cik)}/{validated_accession.replace('-', '')}/"
-                doc_url = urljoin(self.BASE_URL, base_path + quote(link, safe='.-_'))
+                doc_url = urljoin(self.FILING_URL, base_path + quote(link, safe='.-_'))
 
                 results.append(
                     FilingMetadata(

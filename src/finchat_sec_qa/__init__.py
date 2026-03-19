@@ -7,6 +7,7 @@ from .cli import main as cli_main
 from .edgar_client import AsyncEdgarClient, EdgarClient, FilingMetadata
 from .edgar_validation import validate_accession_number, validate_cik, validate_ticker
 from .logging_utils import configure_logging
+from .entity_linker import Entity, EntityMention, extract_entities, get_top_entities, summarize_entity_map
 from .multi_company import CompanyAnswer, compare_question_across_filings
 from .qa_engine import DocumentChunk, FinancialQAEngine
 from .query_handler import AsyncQueryHandler, QueryHandler
@@ -62,6 +63,12 @@ __all__ = [
     "validate_ticker",
     "validate_cik",
     "validate_accession_number",
+    # Entity linking
+    "Entity",
+    "EntityMention",
+    "extract_entities",
+    "get_top_entities",
+    "summarize_entity_map",
 ]
 
 # Add Quantum components to __all__ if available

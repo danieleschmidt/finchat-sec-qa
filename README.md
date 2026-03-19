@@ -4,45 +4,53 @@ RAG agent that answers questions about 10-K/10-Q filings and outputs citation-an
 
 ## Features
 
-- **EDGAR Integration**: Automated scraper for SEC filings with real-time updates
-- **Financial QA Engine**: Specialized RAG pipeline for 10-K/10-Q document analysis
+- **EDGAR Integration**: Automated fetcher for SEC filings (free public API, no auth required)
+- **Financial QA Engine**: TF-IDF based RAG pipeline for 10-K/10-Q document analysis
+- **Entity Linking**: Extracts executives, products, companies, and financial metrics with graph-based entity map
 - **Risk Intelligence**: Sentiment analysis and risk-flag tagging of financial passages
-- **Citation Tracking**: Precise source attribution with section and page references
+- **Citation Tracking**: Precise source attribution with character-level offsets
 - **Voice Interface**: Optional text-to-speech output using `pyttsx3`
 - **Multi-Company Analysis**: Compare answers to the same question across multiple filings
+
+## Quick Demo
+
+```bash
+# Fetch AAPL's latest 10-K and answer 5 standard questions with citations
+python demo.py AAPL
+
+# Try other tickers
+python demo.py MSFT
+python demo.py TSLA --form 10-Q
+```
 
 ## Getting Started
 
 ### Prerequisites
 - Python 3.9+
-- SEC EDGAR API access (free registration required)
-- OpenAI API key
+- SEC EDGAR API (public and free, no registration needed)
 
 ### Installation
 
 ```bash
-git clone https://github.com/yourusername/finchat-sec-qa.git
+git clone https://github.com/danieleschmidt/finchat-sec-qa.git
 cd finchat-sec-qa
-pip install -r requirements.txt
-# Install dev tools
-pip install pre-commit
-pre-commit install
-# Install optional voice dependencies to use the --voice flag
+pip install -e .
+pip install beautifulsoup4   # required for HTML parsing
+# Optional dev tools
+pip install -e '.[dev]'
+# Optional voice dependencies
 pip install '.[voice]'
 ```
 
+No API keys needed — SEC EDGAR is a free public API.
+
 ### Configuration
 
-See `docs/setup.md` for detailed EDGAR API keys and OpenAI configuration.
+Filings are cached at `~/.cache/finchat_sec_qa/`. No configuration required for basic use.
 
 ```bash
-# Copy environment template
-cp .env.example .env
-
-# Edit with your API keys
-nano .env
-
-# Cache directory is ~/.cache/finchat_sec_qa
+# Set User-Agent (recommended per SEC guidelines)
+export EDGAR_USER_AGENT="Your Name your@email.com"
 ```
 
 ### Usage
@@ -95,16 +103,56 @@ for ans in compare_question_across_filings("revenue guidance", docs):
 
 ## API Reference
 
-```python
-from finchat import FinChatAgent
+### Core Pipeline
 
-agent = FinChatAgent("my-app/1.0")
-result = agent.query(
-    question="What is the debt-to-equity ratio trend?",
-    ticker="TSLA",
-    filing_type="10-Q"
-)
-print(result.answer)
+```python
+from finchat_sec_qa.edgar_client import EdgarClient
+from finchat_sec_qa.qa_engine import FinancialQAEngine
+from finchat_sec_qa.entity_linker import extract_entities, summarize_entity_map
+from bs4 import BeautifulSoup
+
+# 1. Fetch filing
+client = EdgarClient("MyApp/1.0 myemail@example.com")
+filings = client.get_recent_filings("AAPL", form_type="10-K", limit=1)
+path = client.download_filing(filings[0])
+
+# 2. Parse text
+html = path.read_bytes().decode("utf-8", errors="replace")
+text = BeautifulSoup(html, "html.parser").get_text(separator=" ", strip=True)
+
+# 3. Build TF-IDF index
+engine = FinancialQAEngine()
+engine.add_document("AAPL-10K", text)
+
+# 4. Answer questions with citations
+answer, citations = engine.answer_with_citations("What was total revenue?", top_k=3)
+print(answer[:300])
+for c in citations:
+    print(f"  → {c.doc_id} chars {c.start}-{c.end}")
+
+# 5. Extract entities
+entities = extract_entities(text, "AAPL-10K")
+summary = summarize_entity_map(entities)
+for etype, items in summary.items():
+    print(f"{etype}: {[i['name'] for i in items[:3]]}")
+```
+
+### Entity Linker
+
+The `entity_linker` module extracts named entities from filing text and builds
+a dict-based entity map suitable for downstream graph analysis or display:
+
+```python
+from finchat_sec_qa.entity_linker import extract_entities, get_top_entities
+
+entities = extract_entities(filing_text, doc_id="AAPL-10K-2024")
+
+# Get top products by mention count
+top_products = get_top_entities(entities, "PRODUCT", top_k=5)
+for p in top_products:
+    print(f"{p.name}: {p.mention_count} mentions")
+
+# Entity types: PERSON, COMPANY, PRODUCT, METRIC
 ```
 
 For additional examples and advanced usage, see
